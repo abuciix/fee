@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Untitled</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andalus Architectural Animation Fee Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #E3E3E0; /* Platinum */
+            color: #333;
+        }
+        .container {
+            max-width: 700px;
+            margin: 50px auto;
+            background: #FFFFFF;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #12263A; /* Payne's Blue */
+            color: #FFFFFF;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        .header img {
+            max-width: 80px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: #CBA77C; /* Tan */
+        }
+        .form-container {
+            padding: 20px;
+            background-image: 
+        }
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 4px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        button {
+            background-color: #004AAD; /* Jet Black */
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #00337D; /* Darker Blue */
+        }
+        .result {
+            background: rgba(241, 241, 241, 0.9);
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+        }
+        .result h3 {
+            margin: 0;
+            color: #004AAD;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+            background-color: #12263A;
+        }
+        .social-links a {
+            margin: 0 10px;
+            color: #FFFFFF;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+        .social-links a:hover {
+            color: #CBA77C;
+        }
+        .social-links i {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://via.placeholder.com/80x80.png?text=LOGO" alt="Andalus Logo">
+            <h1>Andalus Fee Calculator</h1>
+            <p>Estimate your architectural animation costs</p>
+        </div>
+        <div class="form-container">
+            <label for="duration">Video Duration (in seconds):</label>
+            <input type="number" id="duration" placeholder="Enter duration" />
+
+            <label for="quality">Rendering Quality:</label>
+            <select id="quality">
+                <option value="50">Basic ($50/sec)</option>
+                <option value="100">Medium ($100/sec)</option>
+                <option value="200">High-quality ($200/sec)</option>
+            </select>
+
+            <label for="detail">Level of Detail:</label>
+            <select id="detail">
+                <option value="1">Simple (no extra cost)</option>
+                <option value="1.2">Moderate (+20%)</option>
+                <option value="1.5">Complex (+50%)</option>
+            </select>
+
+            <label for="revisions">Revisions Included:</label>
+            <select id="revisions">
+                <option value="0">1 (no extra cost)</option>
+                <option value="200">2 (+$200)</option>
+                <option value="500">3+ (+$500)</option>
+            </select>
+
+            <label>
+                <input type="checkbox" id="rush"> Rush Delivery (+30%)
+            </label>
+
+            <label for="resolution">Output Resolution:</label>
+            <select id="resolution">
+                <option value="0">1080p (no extra cost)</option>
+                <option value="500">4K (+$500)</option>
+            </select>
+
+            <button onclick="calculateFee()">Calculate Fee</button>
+
+            <div class="result" id="result">
+                Enter details and click "Calculate Fee" to see the estimate.
+            </div>
+        </div>
+    </div>
+
+    <div class="social-links">
+        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i>Facebook</a>
+        <a href="#" title="Instagram"><i class="fab fa-instagram"></i>Instagram</a>
+        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i>LinkedIn</a>
+        <a href="#" title="YouTube"><i class="fab fa-youtube"></i>YouTube</a>
+    </div>
+
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function calculateFee() {
+            const duration = parseFloat(document.getElementById("duration").value) || 0;
+            const quality = parseFloat(document.getElementById("quality").value);
+            const detail = parseFloat(document.getElementById("detail").value);
+            const revisions = parseFloat(document.getElementById("revisions").value);
+            const rush = document.getElementById("rush").checked ? 1.3 : 1;
+            const resolution = parseFloat(document.getElementById("resolution").value);
+
+            // Base cost calculation
+            let baseCost = duration * quality;
+
+            // Adjust for details and additional costs
+            let totalCost = baseCost * detail + revisions + resolution;
+
+            // Apply rush delivery multiplier
+            totalCost *= rush;
+
+            // Display the result
+            document.getElementById("result").innerHTML = `
+                <h3>Estimated Fee: $${totalCost.toFixed(2)}</h3>
+                <p>Base Cost: $${baseCost.toFixed(2)}</p>
+                <p>Level of Detail Multiplier: ${detail}</p>
+                <p>Revisions: $${revisions}</p>
+                <p>Resolution Upgrade: $${resolution}</p>
+                <p>Rush Delivery Multiplier: ${rush === 1.3 ? "Yes (30% extra)" : "No"}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
