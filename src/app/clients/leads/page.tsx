@@ -37,12 +37,12 @@ export default function LeadsOpportunitiesPage() {
         </span>
       </div>
 
-      <div className="grid gap-4 overflow-x-auto lg:grid-cols-6">
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {LEAD_STAGES.map((stage) => {
           const leads = LEADS.filter((l) => l.stage === stage);
           const stageValue = leads.reduce((sum, l) => sum + l.estValue, 0);
           return (
-            <div key={stage} className="min-w-[220px] rounded-lg border border-border bg-surface-muted/40">
+            <div key={stage} className="w-[240px] shrink-0 rounded-lg border border-border bg-surface-muted/40">
               <div className="border-b border-border p-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-brand-navy">{LEAD_STAGE_META[stage].label}</h3>
