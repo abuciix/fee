@@ -3,16 +3,46 @@
 import { usePathname } from "next/navigation";
 import { findNavItemByHref } from "@/lib/navigation";
 
-function currentTitle(pathname: string) {
+function humanize(slug: string) {
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function currentTitle(pathname: string): { title: string; breadcrumb: string } {
+  if (pathname === "/") return { title: "Dashboard", breadcrumb: "Studio Management System" };
+
   const exact = findNavItemByHref(pathname);
-  if (exact) return { title: exact.label, parent: "parent" in exact ? exact.parent : undefined };
-  if (pathname === "/") return { title: "Dashboard", parent: undefined };
-  return { title: "Not Found", parent: undefined };
+  if (exact) {
+    const parent = "parent" in exact ? exact.parent : undefined;
+    return {
+      title: exact.label,
+      breadcrumb: parent ? `${parent.icon} ${parent.label}` : "Studio Management System",
+    };
+  }
+
+  // No exact nav entry (e.g. a dynamic detail page) — fall back to the
+  // nearest matching ancestor for the breadcrumb and humanize the rest.
+  const segments = pathname.split("/").filter(Boolean);
+  for (let i = segments.length - 1; i > 0; i--) {
+    const ancestor = findNavItemByHref(`/${segments.slice(0, i).join("/")}`);
+    if (ancestor) {
+      const ancestorParent = "parent" in ancestor ? ancestor.parent : undefined;
+      const icon = ancestorParent ? ancestorParent.icon : "icon" in ancestor ? ancestor.icon : "";
+      return {
+        title: humanize(segments[segments.length - 1]),
+        breadcrumb: `${icon} ${ancestor.label}`.trim(),
+      };
+    }
+  }
+
+  return { title: "Not Found", breadcrumb: "Studio Management System" };
 }
 
 export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
-  const { title, parent } = currentTitle(pathname);
+  const { title, breadcrumb } = currentTitle(pathname);
 
   return (
     <header className="flex h-16 items-center gap-3 border-b border-border bg-surface px-4 sm:px-6">
@@ -26,9 +56,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
       </button>
 
       <div className="min-w-0 flex-1">
-        <div className="truncate text-xs text-status-neutral">
-          {parent ? `${parent.icon} ${parent.label}` : "Studio Management System"}
-        </div>
+        <div className="truncate text-xs text-status-neutral">{breadcrumb}</div>
         <h1 className="truncate text-lg font-semibold text-brand-navy">{title}</h1>
       </div>
 

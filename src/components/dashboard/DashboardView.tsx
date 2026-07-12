@@ -1,34 +1,24 @@
 import Link from "next/link";
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
+import { PROJECTS, STAGES, TASKS, TASK_STATUS_META } from "@/lib/project-data";
 
 const stats = [
-  { label: "Active Projects", value: "18", hint: "across 4 typologies" },
+  { label: "Active Projects", value: String(PROJECTS.length), hint: `across ${new Set(PROJECTS.map((p) => p.typology)).size} typologies` },
   { label: "Pipeline Value", value: "$1.24M", hint: "12 open opportunities" },
   { label: "Overdue Invoices", value: "$86,400", hint: "5 invoices past due" },
   { label: "Team Utilization", value: "78%", hint: "last 30 days" },
 ];
 
-const stageBreakdown = [
-  { stage: "Concept", count: 5 },
-  { stage: "Design Development", count: 6 },
-  { stage: "Construction Docs", count: 4 },
-  { stage: "Construction Admin", count: 3 },
-];
+const stageBreakdown = STAGES.map((stage) => ({
+  stage,
+  count: PROJECTS.filter((p) => p.stage === stage).length,
+}));
 
 const maxStageCount = Math.max(...stageBreakdown.map((s) => s.count));
 
-const tasks: { title: string; project: string; status: "good" | "warning" | "critical" }[] = [
-  { title: "Client review — Marina Tower facade", project: "Marina Tower", status: "warning" },
-  { title: "Submit RFI response", project: "Greenfield Campus", status: "critical" },
-  { title: "Finalize BOQ for phase 2", project: "Al Noor Residences", status: "good" },
-  { title: "Site visit report", project: "Harbor View Offices", status: "good" },
-];
-
-const statusLabel: Record<string, string> = {
-  good: "On track",
-  warning: "Due soon",
-  critical: "Overdue",
-};
+const upcomingTasks = TASKS.filter((t) => t.status !== "done")
+  .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+  .slice(0, 4);
 
 const activity = [
   { text: "Proposal sent to Al Rayan Group", time: "2h ago" },
@@ -54,7 +44,12 @@ export default function DashboardView() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
-          <h3 className="mb-4 text-sm font-semibold text-brand-navy">Active Projects by Stage</h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-brand-navy">Active Projects by Stage</h3>
+            <Link href="/projects/stages" className="text-xs font-medium text-brand-blue hover:underline">
+              View all
+            </Link>
+          </div>
           <ul className="space-y-3">
             {stageBreakdown.map((row) => (
               <li key={row.stage}>
@@ -81,15 +76,21 @@ export default function DashboardView() {
             </Link>
           </div>
           <ul className="space-y-3">
-            {tasks.map((task) => (
-              <li key={task.title} className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="text-sm text-brand-navy">{task.title}</div>
-                  <div className="text-xs text-status-neutral">{task.project}</div>
-                </div>
-                <StatusPill status={task.status} label={statusLabel[task.status]} />
-              </li>
-            ))}
+            {upcomingTasks.map((task) => {
+              const project = PROJECTS.find((p) => p.id === task.projectId);
+              return (
+                <li key={task.id} className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="text-sm text-brand-navy">{task.title}</div>
+                    <div className="text-xs text-status-neutral">{project?.name}</div>
+                  </div>
+                  <StatusPill
+                    status={task.status === "todo" ? "warning" : "neutral"}
+                    label={TASK_STATUS_META[task.status].label}
+                  />
+                </li>
+              );
+            })}
           </ul>
         </Card>
 
