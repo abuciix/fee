@@ -1,5 +1,6 @@
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
-import { PAYROLL, PAYROLL_STATUS_META } from "@/lib/finance-data";
+import { PAYROLL_STATUS_META } from "@/lib/finance-data";
+import { getPayrollRuns } from "@/lib/finance-queries";
 
 export const metadata = { title: "Payroll" };
 
@@ -11,9 +12,10 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function PayrollPage() {
-  const totalMonthly = PAYROLL.reduce((sum, p) => sum + p.monthlyCompensation, 0);
-  const processedCount = PAYROLL.filter((p) => p.lastRunStatus === "processed").length;
+export default async function PayrollPage() {
+  const payroll = await getPayrollRuns();
+  const totalMonthly = payroll.reduce((sum, p) => sum + p.monthlyCompensation, 0);
+  const processedCount = payroll.filter((p) => p.lastRunStatus === "processed").length;
 
   return (
     <div>
@@ -24,8 +26,8 @@ export default function PayrollPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile label="Monthly Payroll" value={formatCurrency(totalMonthly)} hint={`${PAYROLL.length} team members`} />
-        <StatTile label="Last Run Processed" value={`${processedCount} of ${PAYROLL.length}`} hint="June 28, 2026 cycle" />
+        <StatTile label="Monthly Payroll" value={formatCurrency(totalMonthly)} hint={`${payroll.length} team members`} />
+        <StatTile label="Last Run Processed" value={`${processedCount} of ${payroll.length}`} hint="June 28, 2026 cycle" />
         <StatTile label="Next Run" value="Jul 31, 2026" hint="Scheduled" />
       </div>
 
@@ -41,7 +43,7 @@ export default function PayrollPage() {
             </tr>
           </thead>
           <tbody>
-            {PAYROLL.map((person) => {
+            {payroll.map((person) => {
               const meta = PAYROLL_STATUS_META[person.lastRunStatus];
               return (
                 <tr key={person.id} className="border-b border-border last:border-0">

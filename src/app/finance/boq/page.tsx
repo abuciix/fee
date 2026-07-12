@@ -1,5 +1,6 @@
 import { Card, PageHeader, StatTile } from "@/components/ui";
-import { BOQ_ITEMS, boqProjectTotal, boqTotal } from "@/lib/finance-data";
+import { boqTotal } from "@/lib/finance-data";
+import { getBoqItems } from "@/lib/finance-queries";
 
 export const metadata = { title: "BOQ & Estimation" };
 
@@ -7,10 +8,10 @@ function formatCurrency(amount: number) {
   return `$${amount.toLocaleString()}`;
 }
 
-const PROJECTS_IN_BOQ = Array.from(new Set(BOQ_ITEMS.map((item) => item.project)));
-
-export default function BOQPage() {
-  const grandTotal = PROJECTS_IN_BOQ.reduce((sum, project) => sum + boqProjectTotal(project), 0);
+export default async function BOQPage() {
+  const boqItems = await getBoqItems();
+  const projectsInBoq = Array.from(new Set(boqItems.map((item) => item.project)));
+  const grandTotal = boqItems.reduce((sum, item) => sum + boqTotal(item), 0);
 
   return (
     <div>
@@ -21,15 +22,15 @@ export default function BOQPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile label="Sample Projects" value={String(PROJECTS_IN_BOQ.length)} hint="representative BOQ shown" />
+        <StatTile label="Sample Projects" value={String(projectsInBoq.length)} hint="representative BOQ shown" />
         <StatTile label="Combined Estimate" value={formatCurrency(grandTotal)} hint="line items below" />
-        <StatTile label="Line Items" value={String(BOQ_ITEMS.length)} hint="across both projects" />
+        <StatTile label="Line Items" value={String(boqItems.length)} hint="across both projects" />
       </div>
 
       <div className="mt-6 space-y-6">
-        {PROJECTS_IN_BOQ.map((project) => {
-          const items = BOQ_ITEMS.filter((item) => item.project === project);
-          const projectTotal = boqProjectTotal(project);
+        {projectsInBoq.map((project) => {
+          const items = boqItems.filter((item) => item.project === project);
+          const projectTotal = items.reduce((sum, item) => sum + boqTotal(item), 0);
           return (
             <Card key={project} className="overflow-x-auto p-0">
               <div className="flex items-center justify-between border-b border-border p-4">

@@ -1,5 +1,5 @@
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
-import { PROJECTS } from "@/lib/project-data";
+import { getProjects } from "@/lib/project-queries";
 
 export const metadata = { title: "Project Cost Control" };
 
@@ -13,10 +13,11 @@ function burnStatus(spentPct: number): { status: "good" | "warning" | "critical"
   return { status: "good", label: "On budget" };
 }
 
-export default function ProjectCostControlPage() {
-  const totalBudget = PROJECTS.reduce((sum, p) => sum + p.budget, 0);
-  const totalSpent = PROJECTS.reduce((sum, p) => sum + p.budgetSpent, 0);
-  const overBudgetCount = PROJECTS.filter((p) => p.budgetSpent > p.budget).length;
+export default async function ProjectCostControlPage() {
+  const projects = await getProjects();
+  const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+  const totalSpent = projects.reduce((sum, p) => sum + p.budgetSpent, 0);
+  const overBudgetCount = projects.filter((p) => p.budgetSpent > p.budget).length;
 
   return (
     <div>
@@ -27,7 +28,7 @@ export default function ProjectCostControlPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatTile label="Total Budget" value={formatCurrency(totalBudget)} hint={`across ${PROJECTS.length} projects`} />
+        <StatTile label="Total Budget" value={formatCurrency(totalBudget)} hint={`across ${projects.length} projects`} />
         <StatTile
           label="Total Spent"
           value={formatCurrency(totalSpent)}
@@ -53,7 +54,7 @@ export default function ProjectCostControlPage() {
             </tr>
           </thead>
           <tbody>
-            {PROJECTS.map((project) => {
+            {projects.map((project) => {
               const spentPct = Math.round((project.budgetSpent / project.budget) * 100);
               const burn = burnStatus(spentPct);
               return (
