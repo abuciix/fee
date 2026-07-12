@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Card } from "@/components/ui";
-import { KNOWLEDGE_ARTICLES, KNOWLEDGE_CATEGORIES } from "@/lib/operations-data";
+import { KNOWLEDGE_CATEGORIES, type KnowledgeArticle } from "@/lib/operations-data";
 
 const CATEGORY_OPTIONS = ["All", ...KNOWLEDGE_CATEGORIES];
 
@@ -10,19 +10,19 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function KnowledgeLibraryView() {
+export default function KnowledgeLibraryView({ articles }: { articles: KnowledgeArticle[] }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return KNOWLEDGE_ARTICLES.filter((article) => {
+    return articles.filter((article) => {
       if (category !== "All" && article.category !== category) return false;
       if (!q) return true;
       const haystack = `${article.title} ${article.summary} ${article.tags.join(" ")} ${article.author}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [search, category]);
+  }, [search, category, articles]);
 
   return (
     <div>
@@ -52,7 +52,7 @@ export default function KnowledgeLibraryView() {
           ))}
         </select>
         <div className="flex items-center text-xs text-status-neutral">
-          {filtered.length} of {KNOWLEDGE_ARTICLES.length} articles
+          {filtered.length} of {articles.length} articles
         </div>
       </div>
 
