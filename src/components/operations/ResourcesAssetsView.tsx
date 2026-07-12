@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
-import { ASSETS, ASSET_CATEGORIES, ASSET_STATUS_META, type AssetStatus } from "@/lib/operations-data";
+import { ASSET_CATEGORIES, ASSET_STATUS_META, type Asset, type AssetStatus } from "@/lib/operations-data";
 
 const CATEGORY_OPTIONS = ["All", ...ASSET_CATEGORIES];
 const STATUS_OPTIONS: ("All" | AssetStatus)[] = ["All", "in_use", "available", "maintenance"];
@@ -11,20 +11,20 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function ResourcesAssetsView() {
+export default function ResourcesAssetsView({ assets }: { assets: Asset[] }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [status, setStatus] = useState<"All" | AssetStatus>("All");
 
   const filtered = useMemo(() => {
-    return ASSETS.filter((a) => {
+    return assets.filter((a) => {
       if (category !== "All" && a.category !== category) return false;
       if (status !== "All" && a.status !== status) return false;
       if (search && !`${a.name} ${a.assignedTo} ${a.location}`.toLowerCase().includes(search.toLowerCase()))
         return false;
       return true;
     });
-  }, [search, category, status]);
+  }, [search, category, status, assets]);
 
   return (
     <div>
@@ -65,7 +65,7 @@ export default function ResourcesAssetsView() {
           ))}
         </select>
         <div className="flex items-center text-xs text-status-neutral">
-          {filtered.length} of {ASSETS.length} assets
+          {filtered.length} of {assets.length} assets
         </div>
       </div>
 

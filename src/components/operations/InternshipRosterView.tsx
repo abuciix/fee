@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
-import { DISCIPLINES, INTERNS, MILESTONE_STATUS_META } from "@/lib/operations-data";
+import { DISCIPLINES, MILESTONE_STATUS_META, type Intern } from "@/lib/operations-data";
 
 const DISCIPLINE_OPTIONS = ["All", ...DISCIPLINES];
 
@@ -10,18 +10,18 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function InternshipRosterView() {
+export default function InternshipRosterView({ interns }: { interns: Intern[] }) {
   const [search, setSearch] = useState("");
   const [discipline, setDiscipline] = useState("All");
 
   const filtered = useMemo(() => {
-    return INTERNS.filter((intern) => {
+    return interns.filter((intern) => {
       if (discipline !== "All" && intern.discipline !== discipline) return false;
       if (search && !`${intern.name} ${intern.mentor} ${intern.school}`.toLowerCase().includes(search.toLowerCase()))
         return false;
       return true;
     });
-  }, [search, discipline]);
+  }, [search, discipline, interns]);
 
   return (
     <div>
@@ -51,7 +51,7 @@ export default function InternshipRosterView() {
           ))}
         </select>
         <div className="flex items-center text-xs text-status-neutral">
-          {filtered.length} of {INTERNS.length} interns
+          {filtered.length} of {interns.length} interns
         </div>
       </div>
 

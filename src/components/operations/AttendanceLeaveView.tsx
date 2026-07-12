@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
-import { LEAVE_REQUESTS, LEAVE_STATUS_META, type LeaveStatus, overlapsRange } from "@/lib/operations-data";
+import { LEAVE_STATUS_META, type LeaveRequest, type LeaveStatus, overlapsRange } from "@/lib/operations-data";
 
 // Fixed "today" for this demo dataset, keeping the attendance overview consistent
 // regardless of when the app is actually run.
@@ -16,31 +16,31 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export default function AttendanceLeaveView() {
+export default function AttendanceLeaveView({ leaveRequests }: { leaveRequests: LeaveRequest[] }) {
   const [statusFilter, setStatusFilter] = useState<"All" | LeaveStatus>("All");
 
   const onLeaveThisWeek = useMemo(
     () =>
-      LEAVE_REQUESTS.filter(
+      leaveRequests.filter(
         (l) => l.status === "approved" && overlapsRange(l.startDate, l.endDate, TODAY, WEEK_END)
       ),
-    []
+    [leaveRequests]
   );
 
   const upcomingLeave = useMemo(
     () =>
-      LEAVE_REQUESTS.filter(
+      leaveRequests.filter(
         (l) =>
           l.status === "approved" &&
           l.startDate > WEEK_END &&
           overlapsRange(l.startDate, l.endDate, TODAY, UPCOMING_END)
       ).sort((a, b) => a.startDate.localeCompare(b.startDate)),
-    []
+    [leaveRequests]
   );
 
   const filteredRequests = useMemo(
-    () => (statusFilter === "All" ? LEAVE_REQUESTS : LEAVE_REQUESTS.filter((l) => l.status === statusFilter)),
-    [statusFilter]
+    () => (statusFilter === "All" ? leaveRequests : leaveRequests.filter((l) => l.status === statusFilter)),
+    [statusFilter, leaveRequests]
   );
 
   return (

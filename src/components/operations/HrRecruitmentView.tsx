@@ -3,20 +3,25 @@
 import { useMemo, useState } from "react";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
 import {
-  OPEN_ROLES,
-  CANDIDATES,
   RECRUITMENT_STAGES,
   RECRUITMENT_STAGE_META,
   ROLE_STATUS_META,
-  getCandidatesForRole,
+  type Candidate,
+  type OpenRole,
 } from "@/lib/operations-data";
 
-export default function HrRecruitmentView() {
+export default function HrRecruitmentView({
+  roles,
+  candidates,
+}: {
+  roles: OpenRole[];
+  candidates: Candidate[];
+}) {
   const [roleFilter, setRoleFilter] = useState("All");
 
   const filteredCandidates = useMemo(
-    () => (roleFilter === "All" ? CANDIDATES : getCandidatesForRole(roleFilter)),
-    [roleFilter]
+    () => (roleFilter === "All" ? candidates : candidates.filter((c) => c.roleId === roleFilter)),
+    [roleFilter, candidates]
   );
 
   return (
@@ -29,9 +34,9 @@ export default function HrRecruitmentView() {
 
       <h3 className="mb-3 text-sm font-semibold text-brand-navy">Open Roles</h3>
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {OPEN_ROLES.map((role) => {
+        {roles.map((role) => {
           const meta = ROLE_STATUS_META[role.status];
-          const candidateCount = getCandidatesForRole(role.id).length;
+          const candidateCount = candidates.filter((c) => c.roleId === role.id).length;
           return (
             <Card key={role.id}>
               <div className="flex items-start justify-between gap-2">
@@ -65,7 +70,7 @@ export default function HrRecruitmentView() {
             className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-blue"
           >
             <option value="All">All roles</option>
-            {OPEN_ROLES.map((role) => (
+            {roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.title}
               </option>
@@ -77,21 +82,21 @@ export default function HrRecruitmentView() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {RECRUITMENT_STAGES.map((stage) => {
-          const candidates = filteredCandidates.filter((c) => c.stage === stage);
+          const stageCandidates = filteredCandidates.filter((c) => c.stage === stage);
           return (
             <div key={stage} className="rounded-lg border border-border bg-surface-muted/40">
               <div className="flex items-center justify-between border-b border-border p-3">
                 <h4 className="text-sm font-semibold text-brand-navy">{RECRUITMENT_STAGE_META[stage].label}</h4>
                 <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-brand-navy">
-                  {candidates.length}
+                  {stageCandidates.length}
                 </span>
               </div>
               <ul className="space-y-2 p-2">
-                {candidates.length === 0 && (
+                {stageCandidates.length === 0 && (
                   <li className="p-2 text-center text-xs text-status-neutral">No candidates at this stage.</li>
                 )}
-                {candidates.map((candidate) => {
-                  const role = OPEN_ROLES.find((r) => r.id === candidate.roleId);
+                {stageCandidates.map((candidate) => {
+                  const role = roles.find((r) => r.id === candidate.roleId);
                   return (
                     <li key={candidate.id} className="rounded-md border border-border bg-surface p-3 shadow-sm">
                       <div className="text-sm text-brand-navy">{candidate.name}</div>
