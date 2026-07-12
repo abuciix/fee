@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui";
-import { LIBRARY_ITEMS, type LibraryCategory } from "@/lib/tools-data";
+import type { LibraryCategory, LibraryItem } from "@/lib/tools-data";
 
 const CATEGORIES: ("All" | LibraryCategory)[] = [
   "All",
@@ -12,12 +12,12 @@ const CATEGORIES: ("All" | LibraryCategory)[] = [
   "Furniture",
 ];
 
-export default function DesignLibrariesView() {
+export default function DesignLibrariesView({ libraryItems }: { libraryItems: LibraryItem[] }) {
   const [category, setCategory] = useState<"All" | LibraryCategory>("All");
 
   const filtered = useMemo(
-    () => LIBRARY_ITEMS.filter((item) => category === "All" || item.category === category),
-    [category]
+    () => libraryItems.filter((item) => category === "All" || item.category === category),
+    [libraryItems, category]
   );
 
   return (
