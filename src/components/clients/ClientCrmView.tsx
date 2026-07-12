@@ -3,18 +3,22 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeader, StatusPill } from "@/components/ui";
-import { CLIENTS, CLIENT_STATUS_META, type ClientStatus } from "@/lib/client-data";
+import { CLIENT_STATUS_META, type Client, type ClientStatus } from "@/lib/client-data";
 
 const STATUSES: Array<ClientStatus | "All"> = ["All", "active", "prospect", "past"];
-const INDUSTRIES = ["All", ...Array.from(new Set(CLIENTS.map((c) => c.industry)))];
 
-export default function ClientCrmView() {
+export default function ClientCrmView({ clients }: { clients: Client[] }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<ClientStatus | "All">("All");
   const [industry, setIndustry] = useState("All");
 
+  const industries = useMemo(
+    () => ["All", ...Array.from(new Set(clients.map((c) => c.industry)))],
+    [clients]
+  );
+
   const filtered = useMemo(() => {
-    return CLIENTS.filter((c) => {
+    return clients.filter((c) => {
       if (status !== "All" && c.status !== status) return false;
       if (industry !== "All" && c.industry !== industry) return false;
       if (
@@ -24,7 +28,7 @@ export default function ClientCrmView() {
         return false;
       return true;
     });
-  }, [search, status, industry]);
+  }, [clients, search, status, industry]);
 
   return (
     <div>
@@ -58,14 +62,14 @@ export default function ClientCrmView() {
           onChange={(e) => setIndustry(e.target.value)}
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-blue"
         >
-          {INDUSTRIES.map((i) => (
+          {industries.map((i) => (
             <option key={i} value={i}>
               {i === "All" ? "All industries" : i}
             </option>
           ))}
         </select>
         <div className="flex items-center text-xs text-status-neutral">
-          {filtered.length} of {CLIENTS.length} clients
+          {filtered.length} of {clients.length} clients
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/ui";
-import { LEADS, LEAD_STAGES, LEAD_STAGE_META } from "@/lib/client-data";
+import { LEAD_STAGES, LEAD_STAGE_META } from "@/lib/client-data";
+import { getLeads } from "@/lib/client-queries";
 
 export const metadata = { title: "Leads & Opportunities" };
 
@@ -12,7 +13,8 @@ const STAGE_ACCENT: Record<(typeof LEAD_STAGES)[number], string> = {
   lost: "bg-status-critical-bg text-status-critical",
 };
 
-export default function LeadsOpportunitiesPage() {
+export default async function LeadsOpportunitiesPage() {
+  const LEADS = await getLeads();
   const totalValue = LEADS.filter((l) => l.stage !== "lost").reduce((sum, l) => sum + l.estValue, 0);
   const wonValue = LEADS.filter((l) => l.stage === "won").reduce((sum, l) => sum + l.estValue, 0);
 

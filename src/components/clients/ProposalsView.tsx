@@ -3,16 +3,22 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeader, StatusPill } from "@/components/ui";
-import { CLIENTS, PROPOSALS, PROPOSAL_STATUS_META, type ProposalStatus } from "@/lib/client-data";
+import { PROPOSAL_STATUS_META, type Client, type Proposal, type ProposalStatus } from "@/lib/client-data";
 
 const STATUSES: Array<ProposalStatus | "All"> = ["All", "draft", "sent", "accepted", "declined"];
 
-export default function ProposalsView() {
+export default function ProposalsView({
+  proposals,
+  clients,
+}: {
+  proposals: Proposal[];
+  clients: Client[];
+}) {
   const [status, setStatus] = useState<ProposalStatus | "All">("All");
 
   const filtered = useMemo(
-    () => PROPOSALS.filter((p) => status === "All" || p.status === status),
-    [status]
+    () => proposals.filter((p) => status === "All" || p.status === status),
+    [proposals, status]
   );
 
   const totalValue = filtered.reduce((sum, p) => sum + p.value, 0);
@@ -60,7 +66,7 @@ export default function ProposalsView() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((proposal) => {
-                const client = CLIENTS.find((c) => c.id === proposal.clientId);
+                const client = clients.find((c) => c.id === proposal.clientId);
                 const meta = PROPOSAL_STATUS_META[proposal.status];
                 return (
                   <tr key={proposal.id} className="transition-colors hover:bg-surface-muted/50">
