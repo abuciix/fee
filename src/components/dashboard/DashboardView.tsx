@@ -1,24 +1,7 @@
 import Link from "next/link";
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
-import { PROJECTS, STAGES, TASKS, TASK_STATUS_META } from "@/lib/project-data";
-
-const stats = [
-  { label: "Active Projects", value: String(PROJECTS.length), hint: `across ${new Set(PROJECTS.map((p) => p.typology)).size} typologies` },
-  { label: "Pipeline Value", value: "$1.24M", hint: "12 open opportunities" },
-  { label: "Overdue Invoices", value: "$86,400", hint: "5 invoices past due" },
-  { label: "Team Utilization", value: "78%", hint: "last 30 days" },
-];
-
-const stageBreakdown = STAGES.map((stage) => ({
-  stage,
-  count: PROJECTS.filter((p) => p.stage === stage).length,
-}));
-
-const maxStageCount = Math.max(...stageBreakdown.map((s) => s.count));
-
-const upcomingTasks = TASKS.filter((t) => t.status !== "done")
-  .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-  .slice(0, 4);
+import { STAGES, TASK_STATUS_META } from "@/lib/project-data";
+import { getProjects, getTasks } from "@/lib/project-queries";
 
 const activity = [
   { text: "Proposal sent to Al Rayan Group", time: "2h ago" },
@@ -27,7 +10,32 @@ const activity = [
   { text: "New lead: Falcon Retail Fitout", time: "Yesterday" },
 ];
 
-export default function DashboardView() {
+export default async function DashboardView() {
+  const [projects, tasks] = await Promise.all([getProjects(), getTasks()]);
+
+  const stats = [
+    {
+      label: "Active Projects",
+      value: String(projects.length),
+      hint: `across ${new Set(projects.map((p) => p.typology)).size} typologies`,
+    },
+    { label: "Pipeline Value", value: "$1.24M", hint: "12 open opportunities" },
+    { label: "Overdue Invoices", value: "$86,400", hint: "5 invoices past due" },
+    { label: "Team Utilization", value: "78%", hint: "last 30 days" },
+  ];
+
+  const stageBreakdown = STAGES.map((stage) => ({
+    stage,
+    count: projects.filter((p) => p.stage === stage).length,
+  }));
+
+  const maxStageCount = Math.max(...stageBreakdown.map((s) => s.count));
+
+  const upcomingTasks = tasks
+    .filter((t) => t.status !== "done")
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 4);
+
   return (
     <div>
       <PageHeader
@@ -77,7 +85,7 @@ export default function DashboardView() {
           </div>
           <ul className="space-y-3">
             {upcomingTasks.map((task) => {
-              const project = PROJECTS.find((p) => p.id === task.projectId);
+              const project = projects.find((p) => p.id === task.projectId);
               return (
                 <li key={task.id} className="flex items-start justify-between gap-2">
                   <div>
@@ -108,7 +116,8 @@ export default function DashboardView() {
       </div>
 
       <p className="mt-6 text-xs text-status-neutral">
-        Figures shown are sample data for layout purposes and will be replaced once the system is connected to live data.
+        Project and task figures are live from the database. Pipeline, invoice, and utilization
+        figures are still sample data pending the Clients/Finance/Operations data migration.
       </p>
     </div>
   );

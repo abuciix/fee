@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader, StatusPill } from "@/components/ui";
-import { PROJECTS, PROJECT_STATUS_META, STAGES } from "@/lib/project-data";
+import { PROJECT_STATUS_META, STAGES } from "@/lib/project-data";
+import { getProjects } from "@/lib/project-queries";
 
 export const metadata = { title: "Project Stages" };
 
@@ -11,7 +12,9 @@ const STAGE_INFO: Record<(typeof STAGES)[number], string> = {
   "Construction Administration": "Site support through to project handover.",
 };
 
-export default function ProjectStagesPage() {
+export default async function ProjectStagesPage() {
+  const allProjects = await getProjects();
+
   return (
     <div>
       <PageHeader
@@ -22,7 +25,7 @@ export default function ProjectStagesPage() {
 
       <div className="grid gap-4 lg:grid-cols-4">
         {STAGES.map((stage) => {
-          const projects = PROJECTS.filter((p) => p.stage === stage);
+          const projects = allProjects.filter((p) => p.stage === stage);
           return (
             <div key={stage} className="rounded-lg border border-border bg-surface-muted/40">
               <div className="border-b border-border p-3">

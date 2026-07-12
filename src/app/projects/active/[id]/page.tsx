@@ -1,16 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, StatusPill } from "@/components/ui";
-import {
-  PROJECT_STATUS_META,
-  TASK_STATUS_META,
-  getProject,
-  getProjectTasks,
-} from "@/lib/project-data";
+import { PROJECT_STATUS_META, TASK_STATUS_META } from "@/lib/project-data";
+import { getProjectById, getProjectTasks } from "@/lib/project-queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const project = getProject(id);
+  const project = await getProjectById(id);
   return { title: project?.name ?? "Project not found" };
 }
 
@@ -27,10 +23,10 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = getProject(id);
+  const project = await getProjectById(id);
   if (!project) notFound();
 
-  const tasks = getProjectTasks(id);
+  const tasks = await getProjectTasks(id);
   const meta = PROJECT_STATUS_META[project.status];
   const spentPct = Math.round((project.budgetSpent / project.budget) * 100);
 

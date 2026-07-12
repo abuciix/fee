@@ -1,7 +1,9 @@
 import ActiveProjectsView from "@/components/projects/ActiveProjectsView";
+import { getProjects } from "@/lib/project-queries";
 
 export const metadata = { title: "Active Projects" };
 
-export default function ActiveProjectsPage() {
-  return <ActiveProjectsView />;
+export default async function ActiveProjectsPage() {
+  const projects = await getProjects();
+  return <ActiveProjectsView projects={projects} />;
 }

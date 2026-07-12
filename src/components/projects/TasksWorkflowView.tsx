@@ -3,16 +3,22 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
-import { PROJECTS, TASKS, TASK_STATUS_META, type TaskStatus } from "@/lib/project-data";
+import { TASK_STATUS_META, type Project, type ProjectTask, type TaskStatus } from "@/lib/project-data";
 
 const COLUMNS: TaskStatus[] = ["todo", "in_progress", "done"];
 
-export default function TasksWorkflowView() {
+export default function TasksWorkflowView({
+  projects,
+  tasks,
+}: {
+  projects: Project[];
+  tasks: ProjectTask[];
+}) {
   const [projectFilter, setProjectFilter] = useState("All");
 
   const filteredTasks = useMemo(
-    () => TASKS.filter((t) => projectFilter === "All" || t.projectId === projectFilter),
-    [projectFilter]
+    () => tasks.filter((t) => projectFilter === "All" || t.projectId === projectFilter),
+    [tasks, projectFilter]
   );
 
   return (
@@ -30,7 +36,7 @@ export default function TasksWorkflowView() {
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-blue"
         >
           <option value="All">All projects</option>
-          {PROJECTS.map((p) => (
+          {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
@@ -57,7 +63,7 @@ export default function TasksWorkflowView() {
                   <li className="p-2 text-center text-xs text-status-neutral">No tasks here.</li>
                 )}
                 {tasks.map((task) => {
-                  const project = PROJECTS.find((p) => p.id === task.projectId);
+                  const project = projects.find((p) => p.id === task.projectId);
                   return (
                     <li key={task.id} className="rounded-md border border-border bg-surface p-3 shadow-sm">
                       <div className="text-sm text-brand-navy">{task.title}</div>

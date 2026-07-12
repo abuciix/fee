@@ -1,26 +1,32 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PROJECTS } from "@/lib/project-data";
+import type { Project } from "@/lib/project-data";
 import { PageHeader } from "@/components/ui";
 import ProjectCard from "./ProjectCard";
 
-const TYPOLOGIES = ["All", ...Array.from(new Set(PROJECTS.map((p) => p.typology)))];
-const LEADS = ["All", ...Array.from(new Set(PROJECTS.map((p) => p.leadArchitect)))];
-
-export default function ActiveProjectsView() {
+export default function ActiveProjectsView({ projects }: { projects: Project[] }) {
   const [search, setSearch] = useState("");
   const [typology, setTypology] = useState("All");
   const [lead, setLead] = useState("All");
 
+  const typologies = useMemo(
+    () => ["All", ...Array.from(new Set(projects.map((p) => p.typology)))],
+    [projects]
+  );
+  const leads = useMemo(
+    () => ["All", ...Array.from(new Set(projects.map((p) => p.leadArchitect)))],
+    [projects]
+  );
+
   const filtered = useMemo(() => {
-    return PROJECTS.filter((p) => {
+    return projects.filter((p) => {
       if (typology !== "All" && p.typology !== typology) return false;
       if (lead !== "All" && p.leadArchitect !== lead) return false;
       if (search && !`${p.name} ${p.client}`.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [search, typology, lead]);
+  }, [projects, search, typology, lead]);
 
   return (
     <div>
@@ -43,7 +49,7 @@ export default function ActiveProjectsView() {
           onChange={(e) => setTypology(e.target.value)}
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-blue"
         >
-          {TYPOLOGIES.map((t) => (
+          {typologies.map((t) => (
             <option key={t} value={t}>
               {t === "All" ? "All typologies" : t}
             </option>
@@ -54,14 +60,14 @@ export default function ActiveProjectsView() {
           onChange={(e) => setLead(e.target.value)}
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-blue"
         >
-          {LEADS.map((l) => (
+          {leads.map((l) => (
             <option key={l} value={l}>
               {l === "All" ? "All leads" : l}
             </option>
           ))}
         </select>
         <div className="flex items-center text-xs text-status-neutral">
-          {filtered.length} of {PROJECTS.length} projects
+          {filtered.length} of {projects.length} projects
         </div>
       </div>
 
