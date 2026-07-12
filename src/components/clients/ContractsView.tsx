@@ -3,17 +3,25 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeader, StatusPill } from "@/components/ui";
-import { CLIENTS, CONTRACTS, CONTRACT_STATUS_META, type ContractStatus } from "@/lib/client-data";
-import { PROJECTS } from "@/lib/project-data";
+import { CONTRACT_STATUS_META, type Client, type Contract, type ContractStatus } from "@/lib/client-data";
+import type { Project } from "@/lib/project-data";
 
 const STATUSES: Array<ContractStatus | "All"> = ["All", "pending_signature", "active", "completed"];
 
-export default function ContractsView() {
+export default function ContractsView({
+  contracts,
+  clients,
+  projects,
+}: {
+  contracts: Contract[];
+  clients: Client[];
+  projects: Project[];
+}) {
   const [status, setStatus] = useState<ContractStatus | "All">("All");
 
   const filtered = useMemo(
-    () => CONTRACTS.filter((c) => status === "All" || c.status === status),
-    [status]
+    () => contracts.filter((c) => status === "All" || c.status === status),
+    [contracts, status]
   );
 
   const totalValue = filtered.reduce((sum, c) => sum + c.value, 0);
@@ -63,8 +71,8 @@ export default function ContractsView() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((contract) => {
-                const client = CLIENTS.find((c) => c.id === contract.clientId);
-                const project = PROJECTS.find((p) => p.id === contract.projectId);
+                const client = clients.find((c) => c.id === contract.clientId);
+                const project = projects.find((p) => p.id === contract.projectId);
                 const meta = CONTRACT_STATUS_META[contract.status];
                 return (
                   <tr key={contract.id} className="transition-colors hover:bg-surface-muted/50">

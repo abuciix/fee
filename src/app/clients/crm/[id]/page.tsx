@@ -1,19 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, StatusPill } from "@/components/ui";
-import {
-  CLIENT_STATUS_META,
-  CONTRACT_STATUS_META,
-  PROPOSAL_STATUS_META,
-  getClient,
-  getClientContracts,
-  getClientProposals,
-} from "@/lib/client-data";
-import { PROJECTS } from "@/lib/project-data";
+import { CLIENT_STATUS_META, CONTRACT_STATUS_META, PROPOSAL_STATUS_META } from "@/lib/client-data";
+import { getClientById, getClientContracts, getClientProposals } from "@/lib/client-queries";
+import { getProjects } from "@/lib/project-queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const client = getClient(id);
+  const client = await getClientById(id);
   return { title: client?.company ?? "Client not found" };
 }
 
@@ -23,12 +17,15 @@ export default async function ClientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = getClient(id);
+  const client = await getClientById(id);
   if (!client) notFound();
 
-  const proposals = getClientProposals(id);
-  const contracts = getClientContracts(id);
-  const linkedProjects = PROJECTS.filter((p) => client.linkedProjectIds.includes(p.id));
+  const [proposals, contracts, projects] = await Promise.all([
+    getClientProposals(id),
+    getClientContracts(id),
+    getProjects(),
+  ]);
+  const linkedProjects = projects.filter((p) => client.linkedProjectIds.includes(p.id));
   const meta = CLIENT_STATUS_META[client.status];
 
   return (
