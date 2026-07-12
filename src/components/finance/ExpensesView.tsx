@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
-import { EXPENSES, EXPENSE_APPROVAL_META, type ExpenseApprovalStatus } from "@/lib/finance-data";
+import { EXPENSE_APPROVAL_META, type Expense, type ExpenseApprovalStatus } from "@/lib/finance-data";
 
 const APPROVAL_FILTERS: Array<"All" | ExpenseApprovalStatus> = ["All", "pending", "approved", "rejected"];
-const CATEGORIES = ["All", ...Array.from(new Set(EXPENSES.map((e) => e.category)))];
 
 function formatCurrency(amount: number) {
   return `$${amount.toLocaleString()}`;
@@ -15,34 +14,36 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export default function ExpensesView() {
+export default function ExpensesView({ expenses }: { expenses: Expense[] }) {
   const [approval, setApproval] = useState<"All" | ExpenseApprovalStatus>("All");
   const [category, setCategory] = useState("All");
 
+  const categories = useMemo(() => ["All", ...Array.from(new Set(expenses.map((e) => e.category)))], [expenses]);
+
   const totalThisMonth = useMemo(
-    () => EXPENSES.filter((e) => e.date.startsWith("2026-07")).reduce((sum, e) => sum + e.amount, 0),
-    []
+    () => expenses.filter((e) => e.date.startsWith("2026-07")).reduce((sum, e) => sum + e.amount, 0),
+    [expenses]
   );
   const pendingApproval = useMemo(
-    () => EXPENSES.filter((e) => e.approvalStatus === "pending").reduce((sum, e) => sum + e.amount, 0),
-    []
+    () => expenses.filter((e) => e.approvalStatus === "pending").reduce((sum, e) => sum + e.amount, 0),
+    [expenses]
   );
   const reimbursableDue = useMemo(
     () =>
-      EXPENSES.filter((e) => e.reimbursable && e.approvalStatus === "approved").reduce(
+      expenses.filter((e) => e.reimbursable && e.approvalStatus === "approved").reduce(
         (sum, e) => sum + e.amount,
         0
       ),
-    []
+    [expenses]
   );
 
   const filtered = useMemo(() => {
-    return EXPENSES.filter((e) => {
+    return expenses.filter((e) => {
       if (approval !== "All" && e.approvalStatus !== approval) return false;
       if (category !== "All" && e.category !== category) return false;
       return true;
     });
-  }, [approval, category]);
+  }, [expenses, approval, category]);
 
   return (
     <div>
@@ -57,7 +58,7 @@ export default function ExpensesView() {
         <StatTile
           label="Pending Approval"
           value={formatCurrency(pendingApproval)}
-          hint={`${EXPENSES.filter((e) => e.approvalStatus === "pending").length} expenses awaiting review`}
+          hint={`${expenses.filter((e) => e.approvalStatus === "pending").length} expenses awaiting review`}
         />
         <StatTile label="Reimbursable (Approved)" value={formatCurrency(reimbursableDue)} hint="Due to staff" />
       </div>
@@ -68,7 +69,7 @@ export default function ExpensesView() {
           onChange={(e) => setCategory(e.target.value)}
           className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm outline-none focus:border-brand-blue"
         >
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c} value={c}>
               {c === "All" ? "All categories" : c}
             </option>
@@ -86,7 +87,7 @@ export default function ExpensesView() {
           ))}
         </select>
         <div className="text-xs text-status-neutral">
-          {filtered.length} of {EXPENSES.length} expenses
+          {filtered.length} of {expenses.length} expenses
         </div>
       </div>
 

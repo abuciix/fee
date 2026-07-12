@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
-import { INVOICES, INVOICE_STATUS_META, type InvoiceStatus } from "@/lib/finance-data";
+import { INVOICE_STATUS_META, type Invoice, type InvoiceStatus } from "@/lib/finance-data";
 
 const STATUS_FILTERS: Array<"All" | InvoiceStatus> = ["All", "draft", "sent", "paid", "overdue"];
 
@@ -14,36 +14,37 @@ function formatDate(date: string) {
   return new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function InvoicesView() {
+export default function InvoicesView({ invoices }: { invoices: Invoice[] }) {
   const [status, setStatus] = useState<"All" | InvoiceStatus>("All");
   const [search, setSearch] = useState("");
 
   const outstanding = useMemo(
-    () => INVOICES.filter((i) => i.status === "sent" || i.status === "overdue").reduce((sum, i) => sum + i.amount, 0),
-    []
+    () =>
+      invoices.filter((i) => i.status === "sent" || i.status === "overdue").reduce((sum, i) => sum + i.amount, 0),
+    [invoices]
   );
   const overdueAmount = useMemo(
-    () => INVOICES.filter((i) => i.status === "overdue").reduce((sum, i) => sum + i.amount, 0),
-    []
+    () => invoices.filter((i) => i.status === "overdue").reduce((sum, i) => sum + i.amount, 0),
+    [invoices]
   );
   const paidThisMonth = useMemo(
     () =>
-      INVOICES.filter((i) => i.status === "paid" && i.paidDate?.startsWith("2026-07")).reduce(
+      invoices.filter((i) => i.status === "paid" && i.paidDate?.startsWith("2026-07")).reduce(
         (sum, i) => sum + i.amount,
         0
       ),
-    []
+    [invoices]
   );
 
   const filtered = useMemo(() => {
-    return INVOICES.filter((i) => {
+    return invoices.filter((i) => {
       if (status !== "All" && i.status !== status) return false;
       if (search && !`${i.client} ${i.project} ${i.number}`.toLowerCase().includes(search.toLowerCase())) {
         return false;
       }
       return true;
     });
-  }, [status, search]);
+  }, [invoices, status, search]);
 
   return (
     <div>
@@ -57,12 +58,12 @@ export default function InvoicesView() {
         <StatTile
           label="Total Outstanding"
           value={formatCurrency(outstanding)}
-          hint={`${INVOICES.filter((i) => i.status === "sent" || i.status === "overdue").length} unpaid invoices`}
+          hint={`${invoices.filter((i) => i.status === "sent" || i.status === "overdue").length} unpaid invoices`}
         />
         <StatTile
           label="Overdue Amount"
           value={formatCurrency(overdueAmount)}
-          hint={`${INVOICES.filter((i) => i.status === "overdue").length} invoices past due`}
+          hint={`${invoices.filter((i) => i.status === "overdue").length} invoices past due`}
         />
         <StatTile label="Paid This Month" value={formatCurrency(paidThisMonth)} hint="July 2026" />
       </div>
@@ -87,7 +88,7 @@ export default function InvoicesView() {
           ))}
         </select>
         <div className="text-xs text-status-neutral">
-          {filtered.length} of {INVOICES.length} invoices
+          {filtered.length} of {invoices.length} invoices
         </div>
       </div>
 

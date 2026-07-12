@@ -1,5 +1,5 @@
 import { Card, PageHeader, StatTile } from "@/components/ui";
-import { EXPENSES, INVOICES, PAYROLL } from "@/lib/finance-data";
+import { getExpenses, getInvoices, getPayrollRuns } from "@/lib/finance-queries";
 
 export const metadata = { title: "Financial Reports" };
 
@@ -10,32 +10,34 @@ function formatCurrency(amount: number) {
 const QUARTER_START = "2026-07-01";
 const CASH_ON_HAND = 512000;
 
-const quarterInvoices = INVOICES.filter((i) => i.status !== "draft" && i.issueDate >= QUARTER_START);
-const revenueThisQuarter = quarterInvoices.reduce((sum, i) => sum + i.amount, 0);
+export default async function FinancialReportsPage() {
+  const [invoices, expenses, payroll] = await Promise.all([getInvoices(), getExpenses(), getPayrollRuns()]);
 
-const quarterExpenses = EXPENSES.filter((e) => e.date >= QUARTER_START);
-const expensesThisQuarter = quarterExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const quarterInvoices = invoices.filter((i) => i.status !== "draft" && i.issueDate >= QUARTER_START);
+  const revenueThisQuarter = quarterInvoices.reduce((sum, i) => sum + i.amount, 0);
 
-const monthlyPayroll = PAYROLL.reduce((sum, p) => sum + p.monthlyCompensation, 0);
-const quarterlyPayroll = monthlyPayroll * 3;
+  const quarterExpenses = expenses.filter((e) => e.date >= QUARTER_START);
+  const expensesThisQuarter = quarterExpenses.reduce((sum, e) => sum + e.amount, 0);
 
-const totalCosts = expensesThisQuarter + quarterlyPayroll;
-const netMargin = revenueThisQuarter - totalCosts;
-const netMarginPct = revenueThisQuarter > 0 ? Math.round((netMargin / revenueThisQuarter) * 100) : 0;
+  const monthlyPayroll = payroll.reduce((sum, p) => sum + p.monthlyCompensation, 0);
+  const quarterlyPayroll = monthlyPayroll * 3;
 
-const revenueByProject = Array.from(new Set(INVOICES.map((i) => i.project)))
-  .map((project) => ({
-    project,
-    amount: INVOICES.filter((i) => i.project === project && i.status !== "draft").reduce(
-      (sum, i) => sum + i.amount,
-      0
-    ),
-  }))
-  .sort((a, b) => b.amount - a.amount);
+  const totalCosts = expensesThisQuarter + quarterlyPayroll;
+  const netMargin = revenueThisQuarter - totalCosts;
+  const netMarginPct = revenueThisQuarter > 0 ? Math.round((netMargin / revenueThisQuarter) * 100) : 0;
 
-const maxProjectRevenue = Math.max(...revenueByProject.map((r) => r.amount));
+  const revenueByProject = Array.from(new Set(invoices.map((i) => i.project)))
+    .map((project) => ({
+      project,
+      amount: invoices.filter((i) => i.project === project && i.status !== "draft").reduce(
+        (sum, i) => sum + i.amount,
+        0
+      ),
+    }))
+    .sort((a, b) => b.amount - a.amount);
 
-export default function FinancialReportsPage() {
+  const maxProjectRevenue = Math.max(...revenueByProject.map((r) => r.amount));
+
   return (
     <div>
       <PageHeader
