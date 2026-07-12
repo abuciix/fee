@@ -2,6 +2,17 @@
 
 import { usePathname } from "next/navigation";
 import { findNavItemByHref } from "@/lib/navigation";
+import { logout } from "@/app/actions/auth";
+import type { CurrentUser } from "./AppShell";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 function humanize(slug: string) {
   return slug
@@ -40,7 +51,13 @@ function currentTitle(pathname: string): { title: string; breadcrumb: string } {
   return { title: "Not Found", breadcrumb: "Studio Management System" };
 }
 
-export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
+export default function Topbar({
+  onMenuClick,
+  user,
+}: {
+  onMenuClick: () => void;
+  user: CurrentUser;
+}) {
   const pathname = usePathname();
   const { title, breadcrumb } = currentTitle(pathname);
 
@@ -68,9 +85,28 @@ export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         />
       </div>
 
-      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-navy text-sm font-semibold text-white">
-        AA
-      </div>
+      {user && (
+        <div className="flex items-center gap-2">
+          <div className="hidden text-right sm:block">
+            <div className="text-sm font-medium leading-tight text-brand-navy">{user.name}</div>
+            <div className="text-xs leading-tight text-status-neutral">{user.title}</div>
+          </div>
+          <div
+            title={user.name}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-navy text-sm font-semibold text-white"
+          >
+            {initials(user.name)}
+          </div>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="rounded-md px-2 py-1.5 text-xs font-medium text-status-neutral hover:bg-surface-muted hover:text-brand-navy"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
+      )}
     </header>
   );
 }

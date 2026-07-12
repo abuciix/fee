@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                  String    @id
+  email               String    @unique
+  passwordHash        String
+  name                String
+  title               String
+  systemRole          String    @default("member") // "admin" | "member"
+  discipline          String?
+  phone               String?
+  location            String?
+  joinDate            DateTime?
+  utilization         Int?
+  monthlyCompensation Float?
+  createdAt           DateTime  @default(now())
+
+  leadProjects Project[]    @relation("ProjectLead")
+  tasks        Task[]
+  clientNotes  ClientNote[]
+  expenses     Expense[]
+  payrollRuns  PayrollRun[]
+}
+
+model Project {
+  id              String   @id
+  name            String
+  clientId        String?
+  client          Client?  @relation(fields: [clientId], references: [id])
+  typology        String
+  location        String
+  leadArchitectId String?
+  leadArchitect   User?    @relation("ProjectLead", fields: [leadArchitectId], references: [id])
+  stage           String
+  status          String
+  budget          Float
+  budgetSpent     Float
+  nextMilestone   String
+  dueDate         DateTime
+
+  tasks     Task[]
+  invoices  Invoice[]
+  contracts Contract[]
+  expenses  Expense[]
+  boqItems  BOQItem[]
+}
+
+model Task {
+  id         String   @id
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  title      String
+  assigneeId String?
+  assignee   User?    @relation(fields: [assigneeId], references: [id])
+  status     String
+  dueDate    DateTime
+}
+
+model Client {
+  id              String   @id
+  company         String
+  industry        String
+  status          String
+  location        String
+  contactName     String
+  contactRole     String
+  contactEmail    String
+  contactPhone    String
+  lastInteraction DateTime
+
+  projects  Project[]
+  notes     ClientNote[]
+  leads     Lead[]
+  proposals Proposal[]
+  contracts Contract[]
+  invoices  Invoice[]
+}
+
+model ClientNote {
+  id       String   @id
+  clientId String
+  client   Client   @relation(fields: [clientId], references: [id])
+  date     DateTime
+  authorId String?
+  author   User?    @relation(fields: [authorId], references: [id])
+  note     String
+}
+
+model Lead {
+  id          String   @id
+  company     String
+  contactName String
+  stage       String
+  estValue    Float
+  source      String
+  createdDate DateTime
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id])
+}
+
+model Proposal {
+  id          String    @id
+  clientId    String
+  client      Client    @relation(fields: [clientId], references: [id])
+  title       String
+  value       Float
+  status      String
+  dateCreated DateTime
+  dateSent    DateTime?
+}
+
+model Contract {
+  id         String    @id
+  clientId   String
+  client     Client    @relation(fields: [clientId], references: [id])
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id])
+  title      String
+  value      Float
+  status     String
+  signedDate DateTime?
+  startDate  DateTime
+  endDate    DateTime
+}
+
+model Invoice {
+  id        String    @id
+  number    String    @unique
+  clientId  String
+  client    Client    @relation(fields: [clientId], references: [id])
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id])
+  amount    Float
+  status    String
+  issueDate DateTime
+  dueDate   DateTime
+  paidDate  DateTime?
+}
+
+model Expense {
+  id             String   @id
+  description    String
+  category       String
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id])
+  amount         Float
+  reimbursable   Boolean
+  approvalStatus String
+  submittedById  String?
+  submittedBy    User?    @relation(fields: [submittedById], references: [id])
+  date           DateTime
+}
+
+model PayrollRun {
+  id                  String   @id
+  userId              String
+  user                User     @relation(fields: [userId], references: [id])
+  monthlyCompensation Float
+  lastRunDate         DateTime
+  lastRunStatus       String
+}
+
+model BOQItem {
+  id          String  @id
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id])
+  category    String
+  description String
+  unit        String
+  quantity    Float
+  unitCost    Float
+}

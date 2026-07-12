@@ -1,11 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export type CurrentUser = {
+  id: string;
+  name: string;
+  email: string;
+  title: string;
+  systemRole: string;
+} | null;
+
+export default function AppShell({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: CurrentUser;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex h-full min-h-screen">
@@ -28,7 +48,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <Topbar onMenuClick={() => setMobileOpen(true)} />
+        <Topbar onMenuClick={() => setMobileOpen(true)} user={user} />
         <main className="flex-1 bg-background p-4 sm:p-6">{children}</main>
       </div>
     </div>
