@@ -25,11 +25,14 @@ model User {
   monthlyCompensation Float?
   createdAt           DateTime  @default(now())
 
-  leadProjects Project[]    @relation("ProjectLead")
-  tasks        Task[]
-  clientNotes  ClientNote[]
-  expenses     Expense[]
-  payrollRuns  PayrollRun[]
+  leadProjects      Project[]          @relation("ProjectLead")
+  tasks             Task[]
+  clientNotes       ClientNote[]
+  expenses          Expense[]
+  payrollRuns       PayrollRun[]
+  mentoredInterns    Intern[]
+  leaveRequests     LeaveRequest[]
+  knowledgeArticles KnowledgeArticle[]
 }
 
 model Project {
@@ -179,4 +182,118 @@ model BOQItem {
   unit        String
   quantity    Float
   unitCost    Float
+}
+
+model OpenRole {
+  id             String   @id
+  title          String
+  department     String
+  location       String
+  employmentType String
+  postedDate     DateTime
+  status         String
+
+  candidates Candidate[]
+}
+
+model Candidate {
+  id          String   @id
+  roleId      String
+  role        OpenRole @relation(fields: [roleId], references: [id])
+  name        String
+  stage       String
+  appliedDate DateTime
+  source      String
+}
+
+model Intern {
+  id        String   @id
+  name      String
+  school    String
+  discipline String
+  mentorId  String?
+  mentor    User?    @relation(fields: [mentorId], references: [id])
+  startDate DateTime
+  endDate   DateTime
+
+  milestones InternMilestone[]
+}
+
+model InternMilestone {
+  id       String @id
+  internId String
+  intern   Intern @relation(fields: [internId], references: [id])
+  label    String
+  status   String
+  order    Int
+}
+
+model LeaveRequest {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  startDate DateTime
+  endDate   DateTime
+  status    String
+  notes     String?
+}
+
+model Asset {
+  id           String    @id
+  name         String
+  category     String
+  assignedTo   String
+  location     String
+  status       String
+  purchaseDate DateTime
+  nextRenewal  DateTime?
+}
+
+model KnowledgeArticle {
+  id          String   @id
+  title       String
+  category    String
+  tags        String
+  summary     String
+  lastUpdated DateTime
+  authorId    String?
+  author      User?    @relation(fields: [authorId], references: [id])
+}
+
+model Template {
+  id          String   @id
+  name        String
+  type        String
+  description String
+  lastUpdated DateTime
+  owner       String
+}
+
+model LibraryItem {
+  id       String   @id
+  name     String
+  category String
+  format   String
+  icon     String
+  color    String
+  updated  DateTime
+}
+
+model AutomationRule {
+  id          String  @id
+  name        String
+  description String
+  trigger     String
+  action      String
+  enabled     Boolean
+}
+
+model Integration {
+  id          String  @id
+  name        String
+  category    String
+  description String
+  icon        String
+  connected   Boolean
 }

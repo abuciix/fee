@@ -5,7 +5,17 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PROJECTS, TASKS } from "../src/lib/project-data";
 import { CLIENTS, LEADS, PROPOSALS, CONTRACTS } from "../src/lib/client-data";
 import { INVOICES, EXPENSES, PAYROLL, BOQ_ITEMS } from "../src/lib/finance-data";
-import { TEAM_MEMBERS } from "../src/lib/operations-data";
+import {
+  TEAM_MEMBERS,
+  OPEN_ROLES,
+  CANDIDATES,
+  INTERNS,
+  LEAVE_REQUESTS,
+  ASSETS,
+  KNOWLEDGE_ARTICLES,
+} from "../src/lib/operations-data";
+import { TEMPLATES, LIBRARY_ITEMS, AUTOMATION_RULES } from "../src/lib/tools-data";
+import { INTEGRATIONS } from "../src/lib/settings-data";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL ?? "file:./dev.db",
@@ -300,6 +310,200 @@ async function main() {
         unit: item.unit,
         quantity: item.quantity,
         unitCost: item.unitCost,
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // HR & Recruitment
+  // ---------------------------------------------------------------------
+  for (const role of OPEN_ROLES) {
+    await prisma.openRole.upsert({
+      where: { id: role.id },
+      update: {},
+      create: {
+        id: role.id,
+        title: role.title,
+        department: role.department,
+        location: role.location,
+        employmentType: role.employmentType,
+        postedDate: new Date(role.postedDate),
+        status: role.status,
+      },
+    });
+  }
+
+  for (const candidate of CANDIDATES) {
+    await prisma.candidate.upsert({
+      where: { id: candidate.id },
+      update: {},
+      create: {
+        id: candidate.id,
+        roleId: candidate.roleId,
+        name: candidate.name,
+        stage: candidate.stage,
+        appliedDate: new Date(candidate.appliedDate),
+        source: candidate.source,
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Internship Management
+  // ---------------------------------------------------------------------
+  for (const intern of INTERNS) {
+    await prisma.intern.upsert({
+      where: { id: intern.id },
+      update: {},
+      create: {
+        id: intern.id,
+        name: intern.name,
+        school: intern.school,
+        discipline: intern.discipline,
+        mentorId: userId(intern.mentor),
+        startDate: new Date(intern.startDate),
+        endDate: new Date(intern.endDate),
+      },
+    });
+
+    for (const [i, milestone] of intern.milestones.entries()) {
+      await prisma.internMilestone.upsert({
+        where: { id: `${intern.id}-milestone-${i}` },
+        update: {},
+        create: {
+          id: `${intern.id}-milestone-${i}`,
+          internId: intern.id,
+          label: milestone.label,
+          status: milestone.status,
+          order: i,
+        },
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Attendance & Leave
+  // ---------------------------------------------------------------------
+  for (const leave of LEAVE_REQUESTS) {
+    const holderId = userId(leave.name);
+    if (!holderId) continue;
+    await prisma.leaveRequest.upsert({
+      where: { id: leave.id },
+      update: {},
+      create: {
+        id: leave.id,
+        userId: holderId,
+        type: leave.type,
+        startDate: new Date(leave.startDate),
+        endDate: new Date(leave.endDate),
+        status: leave.status,
+        notes: leave.notes,
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Resources & Assets
+  // ---------------------------------------------------------------------
+  for (const asset of ASSETS) {
+    await prisma.asset.upsert({
+      where: { id: asset.id },
+      update: {},
+      create: {
+        id: asset.id,
+        name: asset.name,
+        category: asset.category,
+        assignedTo: asset.assignedTo,
+        location: asset.location,
+        status: asset.status,
+        purchaseDate: new Date(asset.purchaseDate),
+        nextRenewal: asset.nextRenewal ? new Date(asset.nextRenewal) : null,
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Knowledge Library
+  // ---------------------------------------------------------------------
+  for (const article of KNOWLEDGE_ARTICLES) {
+    await prisma.knowledgeArticle.upsert({
+      where: { id: article.id },
+      update: {},
+      create: {
+        id: article.id,
+        title: article.title,
+        category: article.category,
+        tags: article.tags.join(","),
+        summary: article.summary,
+        lastUpdated: new Date(article.lastUpdated),
+        authorId: userId(article.author),
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Templates, Design Libraries, Automation (Tools & Intelligence)
+  // ---------------------------------------------------------------------
+  for (const template of TEMPLATES) {
+    await prisma.template.upsert({
+      where: { id: template.id },
+      update: {},
+      create: {
+        id: template.id,
+        name: template.name,
+        type: template.type,
+        description: template.description,
+        lastUpdated: new Date(template.lastUpdated),
+        owner: template.owner,
+      },
+    });
+  }
+
+  for (const item of LIBRARY_ITEMS) {
+    await prisma.libraryItem.upsert({
+      where: { id: item.id },
+      update: {},
+      create: {
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        format: item.format,
+        icon: item.icon,
+        color: item.color,
+        updated: new Date(item.updated),
+      },
+    });
+  }
+
+  for (const rule of AUTOMATION_RULES) {
+    await prisma.automationRule.upsert({
+      where: { id: rule.id },
+      update: {},
+      create: {
+        id: rule.id,
+        name: rule.name,
+        description: rule.description,
+        trigger: rule.trigger,
+        action: rule.action,
+        enabled: rule.enabled,
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------------
+  // Integrations (Settings)
+  // ---------------------------------------------------------------------
+  for (const integration of INTEGRATIONS) {
+    await prisma.integration.upsert({
+      where: { id: integration.id },
+      update: {},
+      create: {
+        id: integration.id,
+        name: integration.name,
+        category: integration.category,
+        description: integration.description,
+        icon: integration.icon,
+        connected: integration.connected,
       },
     });
   }
