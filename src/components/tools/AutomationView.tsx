@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { PageHeader, Card } from "@/components/ui";
-import { AUTOMATION_RULES } from "@/lib/tools-data";
+import type { AutomationRule } from "@/lib/tools-data";
 
-export default function AutomationView() {
-  const [rules, setRules] = useState(AUTOMATION_RULES);
+export default function AutomationView({ rules: initialRules }: { rules: AutomationRule[] }) {
+  const [rules, setRules] = useState(initialRules);
 
   function toggleRule(id: string) {
     setRules((prev) =>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui";
-import { TEMPLATES, type TemplateType } from "@/lib/tools-data";
+import type { Template, TemplateType } from "@/lib/tools-data";
 
 const TYPES: ("All" | TemplateType)[] = ["All", "Proposal", "Contract", "Drawing Sheet", "Report"];
 
@@ -13,13 +13,13 @@ const TYPE_STYLES: Record<TemplateType, string> = {
   Report: "bg-brand-platinum text-brand-navy",
 };
 
-export default function TemplatesView() {
+export default function TemplatesView({ templates }: { templates: Template[] }) {
   const [type, setType] = useState<"All" | TemplateType>("All");
   const [usedId, setUsedId] = useState<string | null>(null);
 
   const filtered = useMemo(
-    () => TEMPLATES.filter((t) => type === "All" || t.type === type),
-    [type]
+    () => templates.filter((t) => type === "All" || t.type === type),
+    [templates, type]
   );
 
   return (
