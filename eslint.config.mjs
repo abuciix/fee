@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Generated Prisma client — not hand-written, not worth linting.
     "src/generated/**",
+    // Isolated agent worktrees (each has its own .next/node_modules/generated
+    // client on disk) — these aren't respected via .gitignore by ESLint's
+    // flat config, so they must be excluded explicitly here too.
+    ".claude/worktrees/**",
   ]),
 ]);
 
