@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PROJECTS, TASKS } from "../src/lib/project-data";
 import { CLIENTS, LEADS, PROPOSALS, CONTRACTS } from "../src/lib/client-data";
 import { INVOICES, EXPENSES, PAYROLL, BOQ_ITEMS } from "../src/lib/finance-data";
@@ -17,9 +17,10 @@ import {
 import { TEMPLATES, LIBRARY_ITEMS, AUTOMATION_RULES } from "../src/lib/tools-data";
 import { INTEGRATIONS } from "../src/lib/settings-data";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set.");
+}
+const adapter = new PrismaPg(process.env.DATABASE_URL);
 const prisma = new PrismaClient({ adapter });
 
 const DEMO_PASSWORD = "andalus2026";
