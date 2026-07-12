@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f4f2;
+  --foreground: #171717;
+  --surface: #ffffff;
+  --surface-muted: #eceae5;
+  --border: #dfdcd5;
+
+  --color-brand-navy: #12263a;
+  --color-brand-navy-light: #1c3a56;
+  --color-brand-tan: #cba77c;
+  --color-brand-blue: #004aad;
+  --color-brand-platinum: #e3e3e0;
+
+  --color-status-good: #1a7a4c;
+  --color-status-good-bg: #e6f4ec;
+  --color-status-warning: #b45309;
+  --color-status-warning-bg: #fdf1e2;
+  --color-status-critical: #b91c1c;
+  --color-status-critical-bg: #fbe9e9;
+  --color-status-neutral: #6b7280;
+  --color-status-neutral-bg: #eef0f2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+
+  --color-brand-navy: var(--color-brand-navy);
+  --color-brand-navy-light: var(--color-brand-navy-light);
+  --color-brand-tan: var(--color-brand-tan);
+  --color-brand-blue: var(--color-brand-blue);
+  --color-brand-platinum: var(--color-brand-platinum);
+
+  --color-status-good: var(--color-status-good);
+  --color-status-good-bg: var(--color-status-good-bg);
+  --color-status-warning: var(--color-status-warning);
+  --color-status-warning-bg: var(--color-status-warning-bg);
+  --color-status-critical: var(--color-status-critical);
+  --color-status-critical-bg: var(--color-status-critical-bg);
+  --color-status-neutral: var(--color-status-neutral);
+  --color-status-neutral-bg: var(--color-status-neutral-bg);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b1420;
+    --foreground: #e9e9e7;
+    --surface: #121f2e;
+    --surface-muted: #17263880;
+    --border: #223345;
+
+    --color-status-good-bg: #123423;
+    --color-status-warning-bg: #3a2712;
+    --color-status-critical-bg: #3a1414;
+    --color-status-neutral-bg: #1c2733;
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
