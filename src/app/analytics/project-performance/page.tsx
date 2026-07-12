@@ -1,23 +1,26 @@
 import { Card, PageHeader, StatTile, StatusPill } from "@/components/ui";
 import { BarList } from "@/components/analytics/charts";
-import { PROJECTS, PROJECT_STATUS_META } from "@/lib/project-data";
+import { PROJECT_STATUS_META } from "@/lib/project-data";
+import { getProjects } from "@/lib/project-queries";
 import { ON_TIME_DELIVERY, formatUSD } from "@/lib/analytics-data";
 
 export const metadata = { title: "Project Performance" };
 
-const budgetRows = [...PROJECTS]
-  .map((p) => ({
-    label: p.name,
-    value: Math.round((p.budgetSpent / p.budget) * 100),
-    valueLabel: `${Math.round((p.budgetSpent / p.budget) * 100)}% of ${formatUSD(p.budget)}`,
-  }))
-  .sort((a, b) => b.value - a.value);
+export default async function ProjectPerformancePage() {
+  const projects = await getProjects();
 
-const flaggedProjects = PROJECTS.filter((p) => p.status === "at_risk" || p.status === "delayed").sort(
-  (a, b) => (a.status === b.status ? 0 : a.status === "delayed" ? -1 : 1),
-);
+  const budgetRows = [...projects]
+    .map((p) => ({
+      label: p.name,
+      value: Math.round((p.budgetSpent / p.budget) * 100),
+      valueLabel: `${Math.round((p.budgetSpent / p.budget) * 100)}% of ${formatUSD(p.budget)}`,
+    }))
+    .sort((a, b) => b.value - a.value);
 
-export default function ProjectPerformancePage() {
+  const flaggedProjects = projects
+    .filter((p) => p.status === "at_risk" || p.status === "delayed")
+    .sort((a, b) => (a.status === b.status ? 0 : a.status === "delayed" ? -1 : 1));
+
   return (
     <div>
       <PageHeader
@@ -34,7 +37,7 @@ export default function ProjectPerformancePage() {
         />
         <StatTile
           label="Active Projects"
-          value={String(PROJECTS.length)}
+          value={String(projects.length)}
           hint={`${flaggedProjects.length} flagged for risk or delay`}
         />
         <StatTile
@@ -91,7 +94,8 @@ export default function ProjectPerformancePage() {
       </div>
 
       <p className="mt-6 text-xs text-status-neutral">
-        Figures shown are sample data for layout purposes and will be replaced once the system is connected to live data.
+        Project figures are live from the database. Delivery-rate and other portfolio benchmarks are
+        still sample data pending a full analytics data migration.
       </p>
     </div>
   );

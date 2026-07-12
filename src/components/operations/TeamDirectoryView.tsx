@@ -3,21 +3,21 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
-import { DISCIPLINES, TEAM_MEMBERS, getUtilizationMeta } from "@/lib/operations-data";
+import { DISCIPLINES, getUtilizationMeta, type TeamMember } from "@/lib/operations-data";
 
 const DISCIPLINE_OPTIONS = ["All", ...DISCIPLINES];
 
-export default function TeamDirectoryView() {
+export default function TeamDirectoryView({ members }: { members: TeamMember[] }) {
   const [search, setSearch] = useState("");
   const [discipline, setDiscipline] = useState("All");
 
   const filtered = useMemo(() => {
-    return TEAM_MEMBERS.filter((m) => {
+    return members.filter((m) => {
       if (discipline !== "All" && m.discipline !== discipline) return false;
       if (search && !`${m.name} ${m.role}`.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [search, discipline]);
+  }, [members, search, discipline]);
 
   return (
     <div>
@@ -47,7 +47,7 @@ export default function TeamDirectoryView() {
           ))}
         </select>
         <div className="flex items-center text-xs text-status-neutral">
-          {filtered.length} of {TEAM_MEMBERS.length} team members
+          {filtered.length} of {members.length} team members
         </div>
       </div>
 

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card, StatusPill } from "@/components/ui";
-import { TEAM_MEMBERS, getTeamMember, getUtilizationMeta } from "@/lib/operations-data";
+import { getUtilizationMeta } from "@/lib/operations-data";
+import { getTeamMemberById, getTeamMembers } from "@/lib/operations-queries";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const member = getTeamMember(id);
+  const member = await getTeamMemberById(id);
   return { title: member?.name ?? "Team member not found" };
 }
 
@@ -15,11 +16,12 @@ export default async function TeamMemberDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const member = getTeamMember(id);
+  const member = await getTeamMemberById(id);
   if (!member) notFound();
 
   const meta = getUtilizationMeta(member.utilization);
-  const peers = TEAM_MEMBERS.filter((m) => m.discipline === member.discipline && m.id !== member.id);
+  const allMembers = await getTeamMembers();
+  const peers = allMembers.filter((m) => m.discipline === member.discipline && m.id !== member.id);
 
   return (
     <div>
