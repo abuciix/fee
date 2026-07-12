@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
-import { INTEGRATIONS } from "@/lib/settings-data";
+import type { Integration } from "@/lib/settings-data";
 
-export default function IntegrationsView() {
-  const [integrations, setIntegrations] = useState(INTEGRATIONS);
+export default function IntegrationsView({
+  integrations: initialIntegrations,
+}: {
+  integrations: Integration[];
+}) {
+  const [integrations, setIntegrations] = useState(initialIntegrations);
 
   function toggle(id: string) {
     setIntegrations((prev) =>

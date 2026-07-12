@@ -2,16 +2,16 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader, Card, StatusPill } from "@/components/ui";
-import { USERS, USER_STATUS_META, ROLE_PERMISSIONS, type UserRole } from "@/lib/settings-data";
+import { USER_STATUS_META, ROLE_PERMISSIONS, type StudioUser, type UserRole } from "@/lib/settings-data";
 
 const ROLES: ("All" | UserRole)[] = ["All", "Admin", "Architect", "Accountant", "Intern"];
 
-export default function UsersPermissionsView() {
+export default function UsersPermissionsView({ users }: { users: StudioUser[] }) {
   const [role, setRole] = useState<"All" | UserRole>("All");
 
   const filtered = useMemo(
-    () => USERS.filter((u) => role === "All" || u.role === role),
-    [role]
+    () => users.filter((u) => role === "All" || u.role === role),
+    [users, role]
   );
 
   return (
