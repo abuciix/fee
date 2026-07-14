@@ -54,6 +54,15 @@ export async function getClients(): Promise<Client[]> {
   return rows.map(toClient);
 }
 
+export type ClientOption = { id: string; company: string };
+
+export async function getClientOptions(): Promise<ClientOption[]> {
+  return prisma.client.findMany({
+    select: { id: true, company: true },
+    orderBy: { company: "asc" },
+  });
+}
+
 export async function getClientById(id: string): Promise<Client | null> {
   const row = await prisma.client.findUnique({
     where: { id },

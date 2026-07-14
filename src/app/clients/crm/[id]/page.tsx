@@ -41,7 +41,15 @@ export default async function ClientDetailPage({
             {client.industry} · {client.location}
           </p>
         </div>
-        <StatusPill status={meta.pill} label={meta.label} />
+        <div className="flex shrink-0 items-center gap-3">
+          <StatusPill status={meta.pill} label={meta.label} />
+          <Link
+            href={`/clients/crm/${client.id}/edit`}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-brand-navy transition-colors hover:border-brand-tan"
+          >
+            Edit
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

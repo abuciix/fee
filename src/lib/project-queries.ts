@@ -66,6 +66,20 @@ export async function getProjectById(id: string): Promise<Project | null> {
   return row ? toProject(row) : null;
 }
 
+export type ProjectEditData = Project & {
+  clientId: string | null;
+  leadArchitectId: string | null;
+};
+
+export async function getProjectForEdit(id: string): Promise<ProjectEditData | null> {
+  const row = await prisma.project.findUnique({
+    where: { id },
+    include: { client: true, leadArchitect: true },
+  });
+  if (!row) return null;
+  return { ...toProject(row), clientId: row.clientId, leadArchitectId: row.leadArchitectId };
+}
+
 export async function getTasks(): Promise<ProjectTask[]> {
   const rows = await prisma.task.findMany({
     include: { assignee: true },

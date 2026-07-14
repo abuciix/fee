@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { Project } from "@/lib/project-data";
 import { PageHeader } from "@/components/ui";
 import ProjectCard from "./ProjectCard";
@@ -30,11 +31,19 @@ export default function ActiveProjectsView({ projects }: { projects: Project[] }
 
   return (
     <div>
-      <PageHeader
-        icon="🏗"
-        title="Active Projects"
-        description="The live portfolio, grouped by phase, type, and lead architect."
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          icon="🏗"
+          title="Active Projects"
+          description="The live portfolio, grouped by phase, type, and lead architect."
+        />
+        <Link
+          href="/projects/active/new"
+          className="rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
+        >
+          + New Project
+        </Link>
+      </div>
 
       <div className="mb-5 flex flex-wrap gap-3">
         <input

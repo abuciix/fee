@@ -32,11 +32,19 @@ export default function ClientCrmView({ clients }: { clients: Client[] }) {
 
   return (
     <div>
-      <PageHeader
-        icon="🤝"
-        title="Client CRM"
-        description="The master record of every client and contact the studio works with."
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          icon="🤝"
+          title="Client CRM"
+          description="The master record of every client and contact the studio works with."
+        />
+        <Link
+          href="/clients/crm/new"
+          className="rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
+        >
+          + New Client
+        </Link>
+      </div>
 
       <div className="mb-5 flex flex-wrap gap-3">
         <input

@@ -173,3 +173,12 @@ export async function getKnowledgeArticles(): Promise<KnowledgeArticle[]> {
     author: row.author?.name ?? "Unknown",
   }));
 }
+
+export type UserOption = { id: string; name: string; title: string };
+
+export async function getUserOptions(): Promise<UserOption[]> {
+  return prisma.user.findMany({
+    select: { id: true, name: true, title: true },
+    orderBy: { name: "asc" },
+  });
+}
