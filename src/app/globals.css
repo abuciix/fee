@@ -57,10 +57,23 @@
     --surface-muted: #17263880;
     --border: #223345;
 
+    --color-status-good: #4ade80;
     --color-status-good-bg: #123423;
+    --color-status-warning: #fbbf24;
     --color-status-warning-bg: #3a2712;
+    --color-status-critical: #f87171;
     --color-status-critical-bg: #3a1414;
+    --color-status-neutral: #a3b0bd;
     --color-status-neutral-bg: #1c2733;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  /* text-brand-navy is used throughout for headings/values/labels, tuned
+     for light backgrounds. bg-brand-navy (sidebar, buttons) stays as-is —
+     only the text usage needs a lighter color for dark-mode contrast. */
+  .text-brand-navy {
+    color: #e4ecf5;
   }
 }
 
