@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { findNavItemByHref, type NavSection } from "@/lib/navigation";
 import StubPage from "@/components/StubPage";
 import FeeCalculatorPage from "@/components/tools/FeeCalculatorPage";
+import ImportCalculatorPage from "@/components/tools/ImportCalculatorPage";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params;
@@ -11,6 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 const CUSTOM_PAGES: Record<string, () => React.ReactNode> = {
   "/tools/calculators": () => <FeeCalculatorPage />,
+  "/tools/import-calculator": () => <ImportCalculatorPage />,
 };
 
 export default async function CatchAllPage({

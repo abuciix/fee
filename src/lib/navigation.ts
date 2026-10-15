@@ -356,6 +356,16 @@ export const navigation: NavSection[] = [
         ],
       },
       {
+        label: "Import Calculator",
+        href: "/tools/import-calculator",
+        description: "Landed cost calculator for imported goods with HS codes, customs duty and VAT.",
+        features: [
+          "HS code category picker",
+          "Currency and exchange rate input",
+          "Customs duty, VAT and local charges",
+        ],
+      },
+      {
         label: "Templates",
         href: "/tools/templates",
         description: "Reusable document and drawing templates.",
