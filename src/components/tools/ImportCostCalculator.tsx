@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PageHeader, Card } from "@/components/ui";
-import { HS_CODES } from "@/lib/hs-codes";
+import { HS_CATEGORIES } from "@/lib/hs-codes";
 import {
   calculateImportCost,
   VAT_RATE,
@@ -93,7 +93,9 @@ function Row({
 let lineId = 0;
 
 export default function ImportCostCalculator() {
+  const [category, setCategory] = useState("");
   const [hsCode, setHsCode] = useState("");
+  const headings = HS_CATEGORIES.find((c) => c.chapter === category)?.headings ?? [];
   const [currency, setCurrency] = useState("USD");
   const [localCurrency, setLocalCurrency] = useState("ETB");
   const [rate, setRate] = useState("");
@@ -125,6 +127,7 @@ export default function ImportCostCalculator() {
   }
 
   function reset() {
+    setCategory("");
     setHsCode("");
     setRate("");
     setUnitPrice("");
@@ -206,24 +209,57 @@ export default function ImportCostCalculator() {
           </Card>
 
           <Card>
-            <h3 className="mb-4 text-sm font-semibold text-brand-navy">2. Customs duty rate</h3>
+            <h3 className="mb-4 text-sm font-semibold text-brand-navy">2. HS code &amp; customs duty rate</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs font-medium text-status-neutral">
-                  HS code (from price list)
+                  Category
                 </span>
                 <select
-                  value={hsCode}
-                  onChange={(e) => setHsCode(e.target.value)}
+                  value={category}
+                  onChange={(e) => {
+                    setCategory(e.target.value);
+                    setHsCode("");
+                  }}
                   className={inputClass}
                 >
-                  <option value="">Select HS code…</option>
-                  {HS_CODES.map((h) => (
-                    <option key={h.code} value={h.code}>
-                      {h.code} ({h.items} items)
+                  <option value="">Select category…</option>
+                  {HS_CATEGORIES.map((c) => (
+                    <option key={c.chapter} value={c.chapter}>
+                      {c.chapter} · {c.name}
                     </option>
                   ))}
                 </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-status-neutral">
+                  Sub-category
+                </span>
+                <select
+                  value={hsCode}
+                  disabled={!category}
+                  onChange={(e) => setHsCode(e.target.value)}
+                  className={`${inputClass} disabled:opacity-50`}
+                >
+                  <option value="">{category ? "Select sub-category…" : "Select a category first"}</option>
+                  {headings.map((h) => (
+                    <option key={h.code} value={h.code}>
+                      {h.code} · {h.examples.join(", ")}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-status-neutral">
+                  HS code (filled automatically)
+                </span>
+                <input
+                  type="text"
+                  readOnly
+                  value={hsCode}
+                  placeholder="—"
+                  className={`${inputClass} bg-surface-muted font-semibold`}
+                />
               </label>
               <Field
                 label="Duty rate for this HS code"
