@@ -93,6 +93,7 @@ function Row({
 let lineId = 0;
 
 export default function ImportCostCalculator() {
+  const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
   const [hsCode, setHsCode] = useState("");
   const headings = HS_CATEGORIES.find((c) => c.chapter === category)?.headings ?? [];
@@ -127,6 +128,7 @@ export default function ImportCostCalculator() {
   }
 
   function reset() {
+    setTitle("");
     setCategory("");
     setHsCode("");
     setRate("");
@@ -150,6 +152,21 @@ export default function ImportCostCalculator() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
+          <Card>
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-status-neutral">
+                Product title
+              </span>
+              <input
+                type="text"
+                value={title}
+                placeholder="e.g. Ladies leather shoes, 500 pairs"
+                onChange={(e) => setTitle(e.target.value)}
+                className={inputClass}
+              />
+            </label>
+          </Card>
+
           <Card>
             <h3 className="mb-4 text-sm font-semibold text-brand-navy">Currency</h3>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -325,7 +342,9 @@ export default function ImportCostCalculator() {
             <span className="w-32 text-right">{localCurrency || "Local"}</span>
           </div>
           <Card>
-            <h3 className="mb-2 text-sm font-semibold text-brand-navy">CIF value</h3>
+            <h3 className="mb-2 text-sm font-semibold text-brand-navy">
+              CIF value{title.trim() && ` — ${title.trim()}`}
+            </h3>
             <Row rate={fx} label="Goods value (FOB)" value={goodsValue} />
             <Row rate={fx} label="Sea freight" value={num(sea)} />
             <Row rate={fx} label="Land freight" value={num(land)} />
