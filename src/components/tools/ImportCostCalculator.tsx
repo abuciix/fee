@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PageHeader, Card } from "@/components/ui";
+import { HS_CODES } from "@/lib/hs-codes";
 import {
   calculateImportCost,
   VAT_RATE,
@@ -12,6 +13,8 @@ type MiscLine = { id: number; label: string; amount: string };
 
 const inputClass =
   "w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus:border-brand-blue";
+
+const CURRENCIES = ["USD", "EUR", "GBP", "CNY", "AED", "TRY", "INR", "JPY", "KRW", "EGP", "SAR"];
 
 const fmt = (n: number) =>
   n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -59,11 +62,13 @@ function Row({
   value,
   strong,
   hint,
+  rate = 0,
 }: {
   label: string;
   value: number;
   strong?: boolean;
   hint?: string;
+  rate?: number;
 }) {
   return (
     <div
@@ -75,7 +80,12 @@ function Row({
         {label}
         {hint && <span className="ml-2 text-xs text-status-neutral">{hint}</span>}
       </span>
-      <span className="tabular-nums">{fmt(value)}</span>
+      <span className="flex gap-6 tabular-nums">
+        <span>{fmt(value)}</span>
+        <span className="w-32 text-right text-status-neutral">
+          {rate > 0 ? fmt(value * rate) : "—"}
+        </span>
+      </span>
     </div>
   );
 }
@@ -84,6 +94,9 @@ let lineId = 0;
 
 export default function ImportCostCalculator() {
   const [hsCode, setHsCode] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  const [localCurrency, setLocalCurrency] = useState("ETB");
+  const [rate, setRate] = useState("");
   const [goods, setGoods] = useState("");
   const [sea, setSea] = useState("");
   const [land, setLand] = useState("");
@@ -102,12 +115,15 @@ export default function ImportCostCalculator() {
     miscExpenses: misc.map((m) => num(m.amount)),
   });
 
+  const fx = num(rate);
+
   function updateMisc(id: number, patch: Partial<MiscLine>) {
     setMisc((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
   }
 
   function reset() {
     setHsCode("");
+    setRate("");
     setGoods("");
     setSea("");
     setLand("");
@@ -128,6 +144,48 @@ export default function ImportCostCalculator() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <Card>
+            <h3 className="mb-4 text-sm font-semibold text-brand-navy">Currency</h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-status-neutral">
+                  Invoice currency
+                </span>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className={inputClass}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-status-neutral">
+                  Local currency
+                </span>
+                <input
+                  type="text"
+                  maxLength={3}
+                  value={localCurrency}
+                  onChange={(e) => setLocalCurrency(e.target.value.toUpperCase())}
+                  className={inputClass}
+                />
+              </label>
+              <Field
+                label={`Exchange rate (1 ${currency} = ? ${localCurrency || "local"})`}
+                value={rate}
+                onChange={setRate}
+                placeholder="0.0000"
+              />
+            </div>
+            <p className="mt-3 text-xs text-status-neutral">
+              Enter every amount below in {currency}. Results are shown in {currency} and
+              converted to {localCurrency || "local currency"}.
+            </p>
+          </Card>
+
+          <Card>
             <h3 className="mb-4 text-sm font-semibold text-brand-navy">1. CIF value</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Goods value (FOB)" value={goods} onChange={setGoods} />
@@ -143,16 +201,20 @@ export default function ImportCostCalculator() {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs font-medium text-status-neutral">
-                  HS code
+                  HS code (from price list)
                 </span>
-                <input
-                  type="text"
-                  inputMode="numeric"
+                <select
                   value={hsCode}
-                  placeholder="e.g. 3303"
                   onChange={(e) => setHsCode(e.target.value)}
                   className={inputClass}
-                />
+                >
+                  <option value="">Select HS code…</option>
+                  {HS_CODES.map((h) => (
+                    <option key={h.code} value={h.code}>
+                      {h.code} ({h.items} items)
+                    </option>
+                  ))}
+                </select>
               </label>
               <Field
                 label="Duty rate for this HS code"
@@ -213,40 +275,46 @@ export default function ImportCostCalculator() {
         </div>
 
         <div className="space-y-6">
+          <div className="flex justify-end gap-6 px-5 text-xs font-semibold text-status-neutral">
+            <span>{currency}</span>
+            <span className="w-32 text-right">{localCurrency || "Local"}</span>
+          </div>
           <Card>
             <h3 className="mb-2 text-sm font-semibold text-brand-navy">CIF value</h3>
-            <Row label="Goods value (FOB)" value={num(goods)} />
-            <Row label="Sea freight" value={num(sea)} />
-            <Row label="Land freight" value={num(land)} />
-            <Row label="Desk clearance" value={num(desk)} />
-            <Row label="Insurance" value={num(insurance)} />
-            <Row label="Total CIF" value={r.cif} strong />
+            <Row rate={fx} label="Goods value (FOB)" value={num(goods)} />
+            <Row rate={fx} label="Sea freight" value={num(sea)} />
+            <Row rate={fx} label="Land freight" value={num(land)} />
+            <Row rate={fx} label="Desk clearance" value={num(desk)} />
+            <Row rate={fx} label="Insurance" value={num(insurance)} />
+            <Row rate={fx} label="Total CIF" value={r.cif} strong />
           </Card>
 
           <Card>
             <h3 className="mb-2 text-sm font-semibold text-brand-navy">
               Customs tax{hsCode.trim() && ` (HS ${hsCode.trim()})`}
             </h3>
-            <Row label="Customs duty" value={r.customsDuty} hint={`CIF × ${num(dutyPct)}%`} />
+            <Row rate={fx} label="Customs duty" value={r.customsDuty} hint={`CIF × ${num(dutyPct)}%`} />
             <Row
+              rate={fx}
               label="VAT"
               value={r.vat}
               hint={`(CIF + duty) × ${VAT_RATE * 100}%`}
             />
             <Row
+              rate={fx}
               label="Withholding tax"
               value={r.withholdingTax}
               hint={`CIF × ${WITHHOLDING_RATE * 100}%`}
             />
-            <Row label="Total customs tax" value={r.totalCustomsTax} strong />
+            <Row rate={fx} label="Total customs tax" value={r.totalCustomsTax} strong />
           </Card>
 
           <Card>
             <h3 className="mb-2 text-sm font-semibold text-brand-navy">Total import cost</h3>
-            <Row label="CIF" value={r.cif} />
-            <Row label="Customs tax" value={r.totalCustomsTax} />
-            <Row label="Miscellaneous expenses" value={r.totalMisc} />
-            <Row label="Final total expenses" value={r.totalImportCost} strong />
+            <Row rate={fx} label="CIF" value={r.cif} />
+            <Row rate={fx} label="Customs tax" value={r.totalCustomsTax} />
+            <Row rate={fx} label="Miscellaneous expenses" value={r.totalMisc} />
+            <Row rate={fx} label="Final total expenses" value={r.totalImportCost} strong />
           </Card>
 
           <button
