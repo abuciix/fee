@@ -97,7 +97,8 @@ export default function ImportCostCalculator() {
   const [currency, setCurrency] = useState("USD");
   const [localCurrency, setLocalCurrency] = useState("ETB");
   const [rate, setRate] = useState("");
-  const [goods, setGoods] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
+  const [qty, setQty] = useState("");
   const [sea, setSea] = useState("");
   const [land, setLand] = useState("");
   const [desk, setDesk] = useState("");
@@ -105,8 +106,10 @@ export default function ImportCostCalculator() {
   const [dutyPct, setDutyPct] = useState("");
   const [misc, setMisc] = useState<MiscLine[]>([{ id: 0, label: "", amount: "" }]);
 
+  const goodsValue = num(unitPrice) * num(qty);
+
   const r = calculateImportCost({
-    goodsValue: num(goods),
+    goodsValue,
     seaFreight: num(sea),
     landFreight: num(land),
     deskClearance: num(desk),
@@ -124,7 +127,8 @@ export default function ImportCostCalculator() {
   function reset() {
     setHsCode("");
     setRate("");
-    setGoods("");
+    setUnitPrice("");
+    setQty("");
     setSea("");
     setLand("");
     setDesk("");
@@ -188,7 +192,12 @@ export default function ImportCostCalculator() {
           <Card>
             <h3 className="mb-4 text-sm font-semibold text-brand-navy">1. CIF value</h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Goods value (FOB)" value={goods} onChange={setGoods} />
+              <Field label="Unit price (FOB)" value={unitPrice} onChange={setUnitPrice} />
+              <Field label="Quantity" value={qty} onChange={setQty} placeholder="0" />
+              <div className="sm:col-span-2 flex items-baseline justify-between rounded-md bg-surface-muted px-3 py-2 text-sm">
+                <span className="text-status-neutral">Goods value (FOB) = unit price × quantity</span>
+                <span className="font-semibold tabular-nums text-brand-navy">{fmt(goodsValue)}</span>
+              </div>
               <Field label="Sea freight" value={sea} onChange={setSea} />
               <Field label="Land freight" value={land} onChange={setLand} />
               <Field label="Desk clearance" value={desk} onChange={setDesk} />
@@ -281,7 +290,7 @@ export default function ImportCostCalculator() {
           </div>
           <Card>
             <h3 className="mb-2 text-sm font-semibold text-brand-navy">CIF value</h3>
-            <Row rate={fx} label="Goods value (FOB)" value={num(goods)} />
+            <Row rate={fx} label="Goods value (FOB)" value={goodsValue} />
             <Row rate={fx} label="Sea freight" value={num(sea)} />
             <Row rate={fx} label="Land freight" value={num(land)} />
             <Row rate={fx} label="Desk clearance" value={num(desk)} />
