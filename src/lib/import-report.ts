@@ -1,5 +1,5 @@
 import type { ImportCostResult } from "@/lib/import-cost";
-import { VAT_RATE, WITHHOLDING_RATE } from "@/lib/import-cost";
+import { SURTAX_RATE, VAT_RATE, WITHHOLDING_RATE } from "@/lib/import-cost";
 
 export type ImportReportData = {
   title: string;
@@ -17,6 +17,8 @@ export type ImportReportData = {
   deskClearance: number;
   insurance: number;
   dutyRatePct: number;
+  excisePct: number;
+  surtax: boolean;
   misc: { label: string; amount: number }[];
   result: ImportCostResult;
 };
@@ -81,7 +83,9 @@ export function buildReportHtml(d: ImportReportData): string {
 <table>
   ${head("Customs tax")}
   ${row(`Customs duty (CIF × ${d.dutyRatePct}%)`, r.customsDuty)}
-  ${row(`VAT ((CIF + duty) × ${VAT_RATE * 100}%)`, r.vat)}
+  ${r.excise > 0 ? row(`Excise tax ((CIF + duty) × ${d.excisePct}%)`, r.excise) : ""}
+  ${row(`VAT ((CIF + duty${r.excise > 0 ? " + excise" : ""}) × ${VAT_RATE * 100}%)`, r.vat)}
+  ${d.surtax ? row(`Surtax ((CIF + duty${r.excise > 0 ? " + excise" : ""}) × ${SURTAX_RATE * 100}%)`, r.surtax) : ""}
   ${row(`Withholding tax (CIF × ${WITHHOLDING_RATE * 100}%)`, r.withholdingTax)}
   ${row("Total customs tax", r.totalCustomsTax, "t")}
 </table>

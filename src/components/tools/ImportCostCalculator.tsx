@@ -6,6 +6,7 @@ import { HS_CATEGORIES } from "@/lib/hs-codes";
 import { buildReportHtml } from "@/lib/import-report";
 import {
   calculateImportCost,
+  SURTAX_RATE,
   VAT_RATE,
   WITHHOLDING_RATE,
 } from "@/lib/import-cost";
@@ -147,6 +148,8 @@ export default function ImportCostCalculator() {
   const [desk, setDesk] = useState("");
   const [insurance, setInsurance] = useState("");
   const [dutyPct, setDutyPct] = useState("");
+  const [excisePct, setExcisePct] = useState("");
+  const [surtax, setSurtax] = useState(false);
   const [misc, setMisc] = useState<MiscLine[]>([{ id: 0, label: "", amount: "" }]);
 
   // The price list is large, so load it only once an HS code is picked.
@@ -199,6 +202,8 @@ export default function ImportCostCalculator() {
     deskClearance: num(desk),
     insurance: num(insurance),
     dutyRatePct: num(dutyPct),
+    excisePct: num(excisePct),
+    surtaxEnabled: surtax,
     miscExpenses: misc.map((m) => num(m.amount)),
   });
 
@@ -225,6 +230,8 @@ export default function ImportCostCalculator() {
       deskClearance: num(desk),
       insurance: num(insurance),
       dutyRatePct: num(dutyPct),
+      excisePct: num(excisePct),
+      surtax,
       misc: misc.map((m) => ({ label: m.label, amount: num(m.amount) })),
       result: r,
     });
@@ -258,6 +265,8 @@ export default function ImportCostCalculator() {
     setCategory("");
     pickHsCode("");
     setRate("");
+    setExcisePct("");
+    setSurtax(false);
     setUnitPrice("");
     setQty("");
     setSea("");
@@ -395,6 +404,24 @@ export default function ImportCostCalculator() {
                 suffix="%"
                 placeholder="0"
               />
+              <Field
+                label="Excise rate (only if the product is excisable)"
+                value={excisePct}
+                onChange={setExcisePct}
+                suffix="%"
+                placeholder="0"
+              />
+              <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={surtax}
+                  onChange={(e) => setSurtax(e.target.checked)}
+                  className="h-4 w-4 accent-brand-blue"
+                />
+                <span>
+                  Apply {SURTAX_RATE * 100}% surtax
+                </span>
+              </label>
             </div>
 
             <div className="mt-5 border-t border-border pt-4">
@@ -546,12 +573,28 @@ export default function ImportCostCalculator() {
             title={`Customs tax${hsCode.trim() ? ` (HS ${hsCode.trim()})` : ""}`}
           >
             <Row rate={fx} label="Customs duty" value={r.customsDuty} hint={`CIF × ${num(dutyPct)}%`} />
+            {r.excise > 0 && (
+              <Row
+                rate={fx}
+                label="Excise tax"
+                value={r.excise}
+                hint={`(CIF + duty) × ${num(excisePct)}%`}
+              />
+            )}
             <Row
               rate={fx}
               label="VAT"
               value={r.vat}
-              hint={`(CIF + duty) × ${VAT_RATE * 100}%`}
+              hint={`(CIF + duty${r.excise > 0 ? " + excise" : ""}) × ${VAT_RATE * 100}%`}
             />
+            {surtax && (
+              <Row
+                rate={fx}
+                label="Surtax"
+                value={r.surtax}
+                hint={`(CIF + duty${r.excise > 0 ? " + excise" : ""}) × ${SURTAX_RATE * 100}%`}
+              />
+            )}
             <Row
               rate={fx}
               label="Withholding tax"
