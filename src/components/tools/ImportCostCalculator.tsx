@@ -58,6 +58,8 @@ function Field({
   );
 }
 
+const GRID = "grid grid-cols-[minmax(0,1fr)_5.5rem_6.5rem] gap-x-2 sm:grid-cols-[minmax(0,1fr)_8rem_9rem]";
+
 function Row({
   label,
   value,
@@ -73,21 +75,48 @@ function Row({
 }) {
   return (
     <div
-      className={`flex items-baseline justify-between gap-4 py-1.5 text-sm ${
-        strong ? "border-t border-border pt-3 font-semibold text-brand-navy" : ""
+      className={`${GRID} items-baseline py-1.5 text-sm ${
+        strong ? "mt-1 border-t border-border pt-3 font-semibold text-brand-navy" : ""
       }`}
     >
-      <span>
+      <span className="min-w-0">
         {label}
-        {hint && <span className="ml-2 text-xs text-status-neutral">{hint}</span>}
+        {hint && <span className="block text-xs font-normal text-status-neutral">{hint}</span>}
       </span>
-      <span className="flex gap-6 tabular-nums">
-        <span>{fmt(value)}</span>
-        <span className="w-32 text-right text-status-neutral">
-          {rate > 0 ? fmt(value * rate) : "—"}
-        </span>
+      <span className="text-right tabular-nums">{fmt(value)}</span>
+      <span className="text-right tabular-nums text-status-neutral">
+        {rate > 0 ? fmt(value * rate) : "—"}
       </span>
     </div>
+  );
+}
+
+function ResultCard({
+  title,
+  currency,
+  localCurrency,
+  children,
+}: {
+  title: string;
+  currency: string;
+  localCurrency: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card>
+      <div className={`${GRID} mb-2 items-baseline`}>
+        <h3 className="col-span-3 mb-1 min-w-0 text-sm font-semibold text-brand-navy sm:col-span-1 sm:mb-0 sm:truncate">
+          {title}
+        </h3>
+        <span className="col-start-2 text-right text-xs font-semibold text-status-neutral sm:col-start-auto">
+          {currency}
+        </span>
+        <span className="text-right text-xs font-semibold text-status-neutral">
+          {localCurrency || "Local"}
+        </span>
+      </div>
+      {children}
+    </Card>
   );
 }
 
@@ -259,7 +288,7 @@ export default function ImportCostCalculator() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Unit price (FOB)" value={unitPrice} onChange={setUnitPrice} />
               <Field label="Quantity" value={qty} onChange={setQty} placeholder="0" />
-              <div className="sm:col-span-2 flex items-baseline justify-between rounded-md bg-surface-muted px-3 py-2 text-sm">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 rounded-md bg-surface-muted px-3 py-2 text-sm sm:col-span-2">
                 <span className="text-status-neutral">Goods value (FOB) = unit price × quantity</span>
                 <span className="font-semibold tabular-nums text-brand-navy">{fmt(goodsValue)}</span>
               </div>
@@ -382,26 +411,24 @@ export default function ImportCostCalculator() {
         </div>
 
         <div className="space-y-6">
-          <div className="flex justify-end gap-6 px-5 text-xs font-semibold text-status-neutral">
-            <span>{currency}</span>
-            <span className="w-32 text-right">{localCurrency || "Local"}</span>
-          </div>
-          <Card>
-            <h3 className="mb-2 text-sm font-semibold text-brand-navy">
-              CIF value{title.trim() && ` — ${title.trim()}`}
-            </h3>
+          <ResultCard
+            currency={currency}
+            localCurrency={localCurrency}
+            title={`CIF value${title.trim() ? ` — ${title.trim()}` : ""}`}
+          >
             <Row rate={fx} label="Goods value (FOB)" value={goodsValue} />
             <Row rate={fx} label="Sea freight" value={num(sea)} />
             <Row rate={fx} label="Land freight" value={num(land)} />
             <Row rate={fx} label="Desk clearance" value={num(desk)} />
             <Row rate={fx} label="Insurance" value={num(insurance)} />
             <Row rate={fx} label="Total CIF" value={r.cif} strong />
-          </Card>
+          </ResultCard>
 
-          <Card>
-            <h3 className="mb-2 text-sm font-semibold text-brand-navy">
-              Customs tax{hsCode.trim() && ` (HS ${hsCode.trim()})`}
-            </h3>
+          <ResultCard
+            currency={currency}
+            localCurrency={localCurrency}
+            title={`Customs tax${hsCode.trim() ? ` (HS ${hsCode.trim()})` : ""}`}
+          >
             <Row rate={fx} label="Customs duty" value={r.customsDuty} hint={`CIF × ${num(dutyPct)}%`} />
             <Row
               rate={fx}
@@ -416,15 +443,14 @@ export default function ImportCostCalculator() {
               hint={`CIF × ${WITHHOLDING_RATE * 100}%`}
             />
             <Row rate={fx} label="Total customs tax" value={r.totalCustomsTax} strong />
-          </Card>
+          </ResultCard>
 
-          <Card>
-            <h3 className="mb-2 text-sm font-semibold text-brand-navy">Total import cost</h3>
+          <ResultCard currency={currency} localCurrency={localCurrency} title="Total import cost">
             <Row rate={fx} label="CIF" value={r.cif} />
             <Row rate={fx} label="Customs tax" value={r.totalCustomsTax} />
             <Row rate={fx} label="Miscellaneous expenses" value={r.totalMisc} />
             <Row rate={fx} label="Final total expenses" value={r.totalImportCost} strong />
-          </Card>
+          </ResultCard>
 
           <div className="flex flex-wrap gap-3">
           <button
@@ -450,6 +476,14 @@ export default function ImportCostCalculator() {
           </button>
           </div>
         </div>
+      </div>
+      <div className="sticky bottom-3 z-10 mt-6 flex items-baseline justify-between rounded-lg border border-border bg-surface px-4 py-3 shadow-lg lg:hidden">
+        <span className="text-xs font-medium uppercase tracking-wide text-status-neutral">
+          Final total
+        </span>
+        <span className="text-lg font-semibold tabular-nums text-brand-navy">
+          {fmt(r.totalImportCost)} {currency}
+        </span>
       </div>
     </div>
   );
