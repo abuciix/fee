@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PageHeader, Card } from "@/components/ui";
 import { HS_CATEGORIES } from "@/lib/hs-codes";
+import { buildReportHtml } from "@/lib/import-report";
 import {
   calculateImportCost,
   VAT_RATE,
@@ -125,6 +126,50 @@ export default function ImportCostCalculator() {
 
   function updateMisc(id: number, patch: Partial<MiscLine>) {
     setMisc((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  }
+
+  function reportHtml() {
+    return buildReportHtml({
+      title,
+      hsCode,
+      categoryName: HS_CATEGORIES.find((c) => c.chapter === category)?.name ?? "",
+      currency,
+      localCurrency,
+      rate: fx,
+      unitPrice: num(unitPrice),
+      quantity: num(qty),
+      goodsValue,
+      seaFreight: num(sea),
+      landFreight: num(land),
+      deskClearance: num(desk),
+      insurance: num(insurance),
+      dutyRatePct: num(dutyPct),
+      misc: misc.map((m) => ({ label: m.label, amount: num(m.amount) })),
+      result: r,
+    });
+  }
+
+  function exportPdf() {
+    const frame = document.createElement("iframe");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    frame.srcdoc = reportHtml();
+    frame.onload = () => {
+      frame.contentWindow?.focus();
+      frame.contentWindow?.print();
+      setTimeout(() => frame.remove(), 60_000);
+    };
+    document.body.appendChild(frame);
+  }
+
+  function downloadHtml() {
+    const url = URL.createObjectURL(new Blob([reportHtml()], { type: "text/html" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `import-cost-${hsCode || "report"}.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
   function reset() {
@@ -381,6 +426,21 @@ export default function ImportCostCalculator() {
             <Row rate={fx} label="Final total expenses" value={r.totalImportCost} strong />
           </Card>
 
+          <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={exportPdf}
+            className="rounded-md bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
+          >
+            Export PDF
+          </button>
+          <button
+            type="button"
+            onClick={downloadHtml}
+            className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-brand-navy hover:bg-surface-muted"
+          >
+            Download HTML
+          </button>
           <button
             type="button"
             onClick={reset}
@@ -388,6 +448,7 @@ export default function ImportCostCalculator() {
           >
             Reset
           </button>
+          </div>
         </div>
       </div>
     </div>
