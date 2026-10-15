@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader, Card } from "@/components/ui";
 import { HS_CATEGORIES } from "@/lib/hs-codes";
 import { buildReportHtml } from "@/lib/import-report";
@@ -9,6 +9,12 @@ import {
   VAT_RATE,
   WITHHOLDING_RATE,
 } from "@/lib/import-cost";
+
+// [reference, description, origin, FOB USD price per unit, unit]
+type HsItem = [number, string, string, number, string];
+type HsItems = Record<string, HsItem[]>;
+
+const MAX_OPTIONS = 300;
 
 type MiscLine = { id: number; label: string; amount: string };
 
@@ -127,6 +133,10 @@ export default function ImportCostCalculator() {
   const [category, setCategory] = useState("");
   const [hsCode, setHsCode] = useState("");
   const headings = HS_CATEGORIES.find((c) => c.chapter === category)?.headings ?? [];
+  const [allItems, setAllItems] = useState<HsItems | null>(null);
+  const [itemSearch, setItemSearch] = useState("");
+  const [itemRef, setItemRef] = useState("");
+  const [unit, setUnit] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [localCurrency, setLocalCurrency] = useState("ETB");
   const [rate, setRate] = useState("");
@@ -138,6 +148,47 @@ export default function ImportCostCalculator() {
   const [insurance, setInsurance] = useState("");
   const [dutyPct, setDutyPct] = useState("");
   const [misc, setMisc] = useState<MiscLine[]>([{ id: 0, label: "", amount: "" }]);
+
+  // The price list is large, so load it only once an HS code is picked.
+  useEffect(() => {
+    if (!hsCode || allItems) return;
+    let cancelled = false;
+    import("@/lib/hs-items.json").then((m) => {
+      if (!cancelled) setAllItems(m.default as unknown as HsItems);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hsCode, allItems]);
+
+  const items = (hsCode && allItems?.[hsCode]) || [];
+  const needle = itemSearch.trim().toLowerCase();
+  const matches = needle
+    ? items.filter((i) => `${i[1]} ${i[2]}`.toLowerCase().includes(needle))
+    : items;
+  const shown = matches.slice(0, MAX_OPTIONS);
+  const selected = items.find((i) => String(i[0]) === itemRef);
+
+  function pickItem(ref: string) {
+    setItemRef(ref);
+    const it = items.find((i) => String(i[0]) === ref);
+    if (!it) {
+      setUnit("");
+      return;
+    }
+    if (currency !== "USD") setRate(""); // the price list is in USD
+    setCurrency("USD");
+    setUnitPrice(String(it[3]));
+    setUnit(it[4]);
+    setTitle(it[1]);
+  }
+
+  function pickHsCode(code: string) {
+    setHsCode(code);
+    setItemRef("");
+    setItemSearch("");
+    setUnit("");
+  }
 
   const goodsValue = num(unitPrice) * num(qty);
 
@@ -167,6 +218,7 @@ export default function ImportCostCalculator() {
       rate: fx,
       unitPrice: num(unitPrice),
       quantity: num(qty),
+      unit,
       goodsValue,
       seaFreight: num(sea),
       landFreight: num(land),
@@ -204,7 +256,7 @@ export default function ImportCostCalculator() {
   function reset() {
     setTitle("");
     setCategory("");
-    setHsCode("");
+    pickHsCode("");
     setRate("");
     setUnitPrice("");
     setQty("");
@@ -284,23 +336,7 @@ export default function ImportCostCalculator() {
           </Card>
 
           <Card>
-            <h3 className="mb-4 text-sm font-semibold text-brand-navy">1. CIF value</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Unit price (FOB)" value={unitPrice} onChange={setUnitPrice} />
-              <Field label="Quantity" value={qty} onChange={setQty} placeholder="0" />
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 rounded-md bg-surface-muted px-3 py-2 text-sm sm:col-span-2">
-                <span className="text-status-neutral">Goods value (FOB) = unit price × quantity</span>
-                <span className="font-semibold tabular-nums text-brand-navy">{fmt(goodsValue)}</span>
-              </div>
-              <Field label="Sea freight" value={sea} onChange={setSea} />
-              <Field label="Land freight" value={land} onChange={setLand} />
-              <Field label="Desk clearance" value={desk} onChange={setDesk} />
-              <Field label="Insurance" value={insurance} onChange={setInsurance} />
-            </div>
-          </Card>
-
-          <Card>
-            <h3 className="mb-4 text-sm font-semibold text-brand-navy">2. HS code &amp; customs duty rate</h3>
+            <h3 className="mb-4 text-sm font-semibold text-brand-navy">1. HS code, product &amp; duty rate</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1 block text-xs font-medium text-status-neutral">
@@ -310,7 +346,7 @@ export default function ImportCostCalculator() {
                   value={category}
                   onChange={(e) => {
                     setCategory(e.target.value);
-                    setHsCode("");
+                    pickHsCode("");
                   }}
                   className={inputClass}
                 >
@@ -329,7 +365,7 @@ export default function ImportCostCalculator() {
                 <select
                   value={hsCode}
                   disabled={!category}
-                  onChange={(e) => setHsCode(e.target.value)}
+                  onChange={(e) => pickHsCode(e.target.value)}
                   className={`${inputClass} disabled:opacity-50`}
                 >
                   <option value="">{category ? "Select sub-category…" : "Select a category first"}</option>
@@ -359,6 +395,86 @@ export default function ImportCostCalculator() {
                 suffix="%"
                 placeholder="0"
               />
+            </div>
+
+            <div className="mt-5 border-t border-border pt-4">
+              <div className="mb-1 flex items-baseline justify-between">
+                <span className="text-xs font-medium text-status-neutral">
+                  Product from price list (fills unit price)
+                </span>
+                {hsCode && (
+                  <span className="text-xs text-status-neutral">
+                    {allItems ? `${matches.length} of ${items.length} items` : "Loading…"}
+                  </span>
+                )}
+              </div>
+              <input
+                type="search"
+                value={itemSearch}
+                disabled={!hsCode}
+                placeholder={hsCode ? "Search by product name or origin…" : "Select a sub-category first"}
+                onChange={(e) => setItemSearch(e.target.value)}
+                className={`${inputClass} mb-2 disabled:opacity-50`}
+              />
+              <select
+                value={itemRef}
+                disabled={!hsCode || !allItems}
+                onChange={(e) => pickItem(e.target.value)}
+                className={`${inputClass} disabled:opacity-50`}
+              >
+                <option value="">Select product…</option>
+                {selected && !shown.includes(selected) && (
+                  <option value={String(selected[0])}>{selected[1]}</option>
+                )}
+                {shown.map((i) => (
+                  <option key={i[0]} value={String(i[0])}>
+                    {i[1]} · {i[2]} · {fmt(i[3])} USD/{i[4]}
+                  </option>
+                ))}
+              </select>
+              {matches.length > MAX_OPTIONS && (
+                <p className="mt-1 text-xs text-status-neutral">
+                  Showing the first {MAX_OPTIONS} — type in the search box to narrow down.
+                </p>
+              )}
+              {selected && (
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 rounded-md bg-surface-muted px-3 py-2 text-xs sm:grid-cols-4">
+                  <div>
+                    <dt className="text-status-neutral">HS code</dt>
+                    <dd className="font-semibold">{hsCode}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-status-neutral">HS amount (FOB)</dt>
+                    <dd className="font-semibold tabular-nums">
+                      {fmt(selected[3])} USD / {selected[4]}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-status-neutral">Origin</dt>
+                    <dd className="font-semibold">{selected[2]}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-status-neutral">Reference</dt>
+                    <dd className="font-semibold">{selected[0]}</dd>
+                  </div>
+                </dl>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <h3 className="mb-4 text-sm font-semibold text-brand-navy">2. CIF value</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={unit ? `Unit price (FOB per ${unit})` : "Unit price (FOB)"} value={unitPrice} onChange={setUnitPrice} />
+              <Field label={unit ? `Quantity (${unit})` : "Quantity"} value={qty} onChange={setQty} placeholder="0" />
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 rounded-md bg-surface-muted px-3 py-2 text-sm sm:col-span-2">
+                <span className="text-status-neutral">Goods value (FOB) = unit price × quantity</span>
+                <span className="font-semibold tabular-nums text-brand-navy">{fmt(goodsValue)}</span>
+              </div>
+              <Field label="Sea freight" value={sea} onChange={setSea} />
+              <Field label="Land freight" value={land} onChange={setLand} />
+              <Field label="Desk clearance" value={desk} onChange={setDesk} />
+              <Field label="Insurance" value={insurance} onChange={setInsurance} />
             </div>
           </Card>
 

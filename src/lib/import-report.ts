@@ -10,6 +10,7 @@ export type ImportReportData = {
   rate: number;
   unitPrice: number;
   quantity: number;
+  unit: string;
   goodsValue: number;
   seaFreight: number;
   landFreight: number;
@@ -63,7 +64,7 @@ export function buildReportHtml(d: ImportReportData): string {
 <dl>
   <dt>Product</dt><dd>${esc(d.title || "—")}</dd>
   <dt>HS code</dt><dd>${esc(d.hsCode || "—")}${d.categoryName ? " · " + esc(d.categoryName) : ""}</dd>
-  <dt>Unit price × quantity</dt><dd>${fmt(d.unitPrice)} × ${d.quantity.toLocaleString("en-US")} ${esc(d.currency)}</dd>
+  <dt>Unit price × quantity</dt><dd>${fmt(d.unitPrice)} × ${d.quantity.toLocaleString("en-US")}${d.unit ? " " + esc(d.unit) : ""} ${esc(d.currency)}</dd>
   <dt>Exchange rate</dt><dd>${
     local ? `1 ${esc(d.currency)} = ${d.rate} ${esc(d.localCurrency)}` : "not set"
   }</dd>
